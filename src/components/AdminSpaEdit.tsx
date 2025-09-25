@@ -1,0 +1,681 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
+import { Separator } from './ui/separator';
+
+import { ArrowLeft, Save, X, Plus, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { mockSpas, mockCities, mockCategories, mockPurposes, mockAmenities, mockServiceTemplates } from '../data/mockData';
+import { Spa, SpaService, ContactInfo } from '../types/spa';
+
+export function AdminSpaEdit() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isNew = !id;
+
+  const [formData, setFormData] = useState<Partial<Spa>>({
+    name: '',
+    description: '',
+    location: '',
+    category: 'wellness',
+    purpose: 'relaxation',
+    price: 0,
+    rating: 5.0,
+    reviewCount: 0,
+    images: [''],
+    amenities: [],
+    services: [],
+    contactInfo: {
+      phone: '',
+      email: '',
+      workingHours: '',
+      whatsapp: '',
+      telegram: ''
+    },
+    featured: false,
+    active: true
+  });
+
+  const [selectedAmenityId, setSelectedAmenityId] = useState('');
+  const [selectedServiceId, setSelectedServiceId] = useState('');
+  const [newService, setNewService] = useState<Partial<SpaService>>({
+    name: '',
+    description: '',
+    price: 0,
+    image: ''
+  });
+
+  useEffect(() => {
+    if (!isNew && id) {
+      const spa = mockSpas.find(s => s.id === id);
+      if (spa) {
+        setFormData(spa);
+      }
+    }
+  }, [id, isNew]);
+
+  const categoryOptions = mockCategories.filter(cat => cat.active);
+  const locationOptions = mockCities.filter(city => city.active);
+  const purposeOptions = mockPurposes.filter(purpose => purpose.active);
+  const amenityOptions = mockAmenities.filter(amenity => amenity.active);
+  const serviceTemplateOptions = mockServiceTemplates.filter(service => service.active);
+
+  const handleInputChange = (field: keyof Spa, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleImageChange = (index: number, value: string) => {
+    const newImages = [...(formData.images || [''])];
+    newImages[index] = value;
+    setFormData(prev => ({
+      ...prev,
+      images: newImages
+    }));
+  };
+
+  const addImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      images: [...(prev.images || []), '']
+    }));
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = formData.images?.filter((_, i) => i !== index);
+    setFormData(prev => ({
+      ...prev,
+      images: newImages || ['']
+    }));
+  };
+
+  const addAmenity = () => {
+    if (selectedAmenityId) {
+      const selectedAmenity = amenityOptions.find(a => a.id === selectedAmenityId);
+      if (selectedAmenity && !formData.amenities?.includes(selectedAmenity.name)) {
+        setFormData(prev => ({
+          ...prev,
+          amenities: [...(prev.amenities || []), selectedAmenity.name]
+        }));
+        setSelectedAmenityId('');
+      }
+    }
+  };
+
+  const removeAmenity = (index: number) => {
+    const newAmenities = formData.amenities?.filter((_, i) => i !== index);
+    setFormData(prev => ({
+      ...prev,
+      amenities: newAmenities || []
+    }));
+  };
+
+  const addService = () => {
+    if (selectedServiceId && newService.description && newService.price) {
+      const selectedTemplate = serviceTemplateOptions.find(s => s.id === selectedServiceId);
+      if (selectedTemplate) {
+        const serviceToAdd: SpaService = {
+          id: `service-${Date.now()}`,
+          name: selectedTemplate.name,
+          description: newService.description || '',
+          price: newService.price || 0,
+          image: newService.image || '/api/placeholder/80/80'
+        };
+        
+        setFormData(prev => ({
+          ...prev,
+          services: [...(prev.services || []), serviceToAdd]
+        }));
+        
+        setSelectedServiceId('');
+        setNewService({
+          name: '',
+          description: '',
+          price: 0,
+          image: ''
+        });
+      }
+    }
+  };
+
+  const removeService = (index: number) => {
+    const newServices = formData.services?.filter((_, i) => i !== index);
+    setFormData(prev => ({
+      ...prev,
+      services: newServices || []
+    }));
+  };
+
+  const updateService = (index: number, field: keyof SpaService, value: any) => {
+    const newServices = [...(formData.services || [])];
+    newServices[index] = { ...newServices[index], [field]: value };
+    setFormData(prev => ({
+      ...prev,
+      services: newServices
+    }));
+  };
+
+  const handleContactInfoChange = (field: keyof ContactInfo, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      contactInfo: {
+        ...prev.contactInfo!,
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const spaData: Spa = {
+      id: isNew ? `spa-${Date.now()}` : id!,
+      name: formData.name || '',
+      description: formData.description || '',
+      location: formData.location || '',
+      category: formData.category || 'wellness',
+      price: formData.price || 0,
+      rating: formData.rating || 5.0,
+      reviewCount: formData.reviewCount || 0,
+      images: formData.images?.filter(img => img.trim()) || [],
+      amenities: formData.amenities || [],
+      services: formData.services || [],
+      contactInfo: formData.contactInfo || { phone: '', email: '', workingHours: '' },
+      featured: formData.featured || false,
+      active: formData.active ?? true,
+      createdAt: isNew ? new Date().toISOString() : (formData.createdAt || new Date().toISOString())
+    };
+
+    // Here you would normally save to a backend
+    console.log(isNew ? 'Creating new SPA:' : 'Updating SPA:', spaData);
+    
+    navigate('/admin');
+  };
+
+  return (
+    <div className="px-4 py-6">
+      {/* Back Button */}
+      <Link to="/admin" className="inline-flex items-center gap-2 mb-6 text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" />
+        Назад к списку
+      </Link>
+
+      <div className="w-full">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl mb-2">
+              {isNew ? 'Создание СПА комплекса' : 'Редактирование СПА комплекса'}
+            </h1>
+          </div>
+          
+          {/* Toolbar */}
+          <div className="flex items-center gap-4">
+            <Link to="/admin">
+              <Button type="button" variant="outline">
+                Отмена
+              </Button>
+            </Link>
+            <Button type="submit" form="spa-form" size="lg">
+              <Save className="h-4 w-4 mr-2" />
+              {isNew ? 'Создать СПА' : 'Сохранить изменения'}
+            </Button>
+          </div>
+        </div>
+
+        <form id="spa-form" onSubmit={handleSubmit}>
+          <Tabs defaultValue="basic" className="w-full">
+            <div className="flex justify-end mb-6">
+              <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                <TabsTrigger value="basic">Основное</TabsTrigger>
+                <TabsTrigger value="images">Изображения</TabsTrigger>
+                <TabsTrigger value="amenities">Удобства</TabsTrigger>
+                <TabsTrigger value="services">Услуги</TabsTrigger>
+                <TabsTrigger value="contacts">Контакты</TabsTrigger>
+                <TabsTrigger value="settings">Настройки</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="basic" className="mt-6">
+              {/* Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Основная информация</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Название СПА *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        placeholder="Введите название СПА комплекса"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Город *</Label>
+                      <Select 
+                        value={formData.location} 
+                        onValueChange={(value) => handleInputChange('location', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите город" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {locationOptions.map((location) => (
+                            <SelectItem key={location.id} value={location.name}>
+                              {location.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Описание *</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      placeholder="Введите описание СПА комплекса"
+                      rows={4}
+                      required
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Категория *</Label>
+                      <Select 
+                        value={formData.category} 
+                        onValueChange={(value) => handleInputChange('category', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categoryOptions.map((category) => (
+                            <SelectItem key={category.id} value={category.value}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="purpose">Цель *</Label>
+                      <Select 
+                        value={formData.purpose} 
+                        onValueChange={(value) => handleInputChange('purpose', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите цель" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {purposeOptions.map((purpose) => (
+                            <SelectItem key={purpose.id} value={purpose.value}>
+                              {purpose.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="images" className="mt-6">
+              {/* Images */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Изображения</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {formData.images?.map((image, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <Input
+                        value={image}
+                        onChange={(e) => handleImageChange(index, e.target.value)}
+                        placeholder="URL изображения"
+                        className="flex-1"
+                      />
+                      {formData.images && formData.images.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addImage}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добавить изображение
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="amenities" className="mt-6">
+              {/* Amenities */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Удобства</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Select 
+                      value={selectedAmenityId} 
+                      onValueChange={setSelectedAmenityId}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Выберите удобство" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {amenityOptions
+                          .filter(amenity => !formData.amenities?.includes(amenity.name))
+                          .map((amenity) => (
+                          <SelectItem key={amenity.id} value={amenity.id}>
+                            {amenity.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" onClick={addAmenity}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {formData.amenities && formData.amenities.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Существующие удобства</h4>
+                      <div className="grid gap-4">
+                        {formData.amenities.map((amenity, index) => (
+                          <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                            <Input
+                              value={amenity}
+                              onChange={(e) => {
+                                const newAmenities = [...(formData.amenities || [])];
+                                newAmenities[index] = e.target.value;
+                                setFormData(prev => ({ ...prev, amenities: newAmenities }));
+                              }}
+                              className="flex-1 mr-3"
+                              placeholder="Название удобства"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeAmenity(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="services" className="mt-6">
+              {/* Services */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>СПА услуги</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Add New Service */}
+                  <div className="p-4 border rounded-lg space-y-4">
+                    <h4 className="font-medium">Добавить новую услугу</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Название услуги</Label>
+                        <Select 
+                          value={selectedServiceId} 
+                          onValueChange={(value) => {
+                            setSelectedServiceId(value);
+                            const template = serviceTemplateOptions.find(s => s.id === value);
+                            if (template) {
+                              setNewService(prev => ({ ...prev, name: template.name }));
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите услугу" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {serviceTemplateOptions.map((service) => (
+                              <SelectItem key={service.id} value={service.id}>
+                                {service.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Цена (₴)</Label>
+                        <Input
+                          type="number"
+                          value={newService.price}
+                          onChange={(e) => setNewService(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
+                          placeholder="0"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Описание</Label>
+                      <Textarea
+                        value={newService.description}
+                        onChange={(e) => setNewService(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Описание услуги"
+                        rows={2}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Изображение (URL)</Label>
+                      <Input
+                        value={newService.image}
+                        onChange={(e) => setNewService(prev => ({ ...prev, image: e.target.value }))}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                    <Button type="button" onClick={addService} disabled={!selectedServiceId || !newService.description || !newService.price}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить услугу
+                    </Button>
+                  </div>
+
+                  {/* Existing Services */}
+                  {formData.services && formData.services.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Существующие услуги</h4>
+                      {formData.services.map((service, index) => (
+                        <div key={service.id} className="p-4 border rounded-lg space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-medium">Услуга #{index + 1}</h5>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeService(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Название</Label>
+                              <Input
+                                value={service.name}
+                                onChange={(e) => updateService(index, 'name', e.target.value)}
+                                placeholder="Название услуги"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Цена (₴)</Label>
+                              <Input
+                                type="number"
+                                value={service.price}
+                                onChange={(e) => updateService(index, 'price', parseInt(e.target.value) || 0)}
+                                placeholder="0"
+                                min="0"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Описание</Label>
+                            <Textarea
+                              value={service.description}
+                              onChange={(e) => updateService(index, 'description', e.target.value)}
+                              placeholder="Описание услуги"
+                              rows={2}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Изображение (URL)</Label>
+                            <Input
+                              value={service.image}
+                              onChange={(e) => updateService(index, 'image', e.target.value)}
+                              placeholder="https://example.com/image.jpg"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="contacts" className="mt-6">
+              {/* Contact Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Контактная информация</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Телефон *</Label>
+                      <Input
+                        id="phone"
+                        value={formData.contactInfo?.phone || ''}
+                        onChange={(e) => handleContactInfoChange('phone', e.target.value)}
+                        placeholder="+380 XX XXX XX XX"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.contactInfo?.email || ''}
+                        onChange={(e) => handleContactInfoChange('email', e.target.value)}
+                        placeholder="info@spa.ua"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp">WhatsApp</Label>
+                      <Input
+                        id="whatsapp"
+                        value={formData.contactInfo?.whatsapp || ''}
+                        onChange={(e) => handleContactInfoChange('whatsapp', e.target.value)}
+                        placeholder="+380 XX XXX XX XX"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="telegram">Telegram</Label>
+                      <Input
+                        id="telegram"
+                        value={formData.contactInfo?.telegram || ''}
+                        onChange={(e) => handleContactInfoChange('telegram', e.target.value)}
+                        placeholder="@username или ссылка"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="workingHours">Режим работы *</Label>
+                    <Input
+                      id="workingHours"
+                      value={formData.contactInfo?.workingHours || ''}
+                      onChange={(e) => handleContactInfoChange('workingHours', e.target.value)}
+                      placeholder="Пн-Вс 9:00 - 22:00"
+                      required
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="settings" className="mt-6">
+              {/* Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Настройки</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Рекомендуемый</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Показывать СПА в блоке рекомендаций
+                      </div>
+                    </div>
+                    <Switch
+                      checked={formData.featured}
+                      onCheckedChange={(checked) => handleInputChange('featured', checked)}
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Активен</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Показывать СПА в каталоге
+                      </div>
+                    </div>
+                    <Switch
+                      checked={formData.active}
+                      onCheckedChange={(checked) => handleInputChange('active', checked)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </form>
+      </div>
+    </div>
+  );
+}
