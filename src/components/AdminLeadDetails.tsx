@@ -7,32 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { ArrowLeft } from 'lucide-react';
+import { useLead, useLeadActions } from '../hooks/useLeads';
+import { toast } from 'sonner';
 import type { Lead } from '../types/spa';
-
-// Mock данные для лида (в реальном приложении будет загружаться по ID)
-const mockLead: Lead = {
-  id: '1',
-  spaId: '1',
-  spaName: 'Терма СПА',
-  customerName: 'Анна Петрова',
-  customerPhone: '+380501234567',
-  customerEmail: 'anna@example.com',
-  selectedServices: [
-    { id: '1', name: 'Классический массаж', price: 800 },
-    { id: '2', name: 'Парафинотерапия', price: 600 },
-    { id: '3', name: 'Ароматерапия', price: 500 }
-  ],
-  totalAmount: 1900,
-  message: 'Хочу записаться на завтра после 14:00. Есть ли свободное время?',
-  status: 'new',
-  createdAt: '2024-01-15T10:30:00Z',
-  updatedAt: '2024-01-15T10:30:00Z',
-  visitDate: '2024-01-20T14:00:00Z'
-};
 
 export function AdminLeadDetails() {
   const { id } = useParams();
-  const [lead, setLead] = useState<Lead>(mockLead);
+  const { lead, loading, error, refetch } = useLead(id);
+  const { updateLead, loading: updating } = useLeadActions();
   const [notes, setNotes] = useState('');
 
   const statusLabels = {
@@ -49,12 +31,19 @@ export function AdminLeadDetails() {
     cancelled: 'secondary'
   } as const;
 
-  const handleStatusChange = (newStatus: string) => {
-    setLead(prev => ({
-      ...prev,
-      status: newStatus as Lead['status'],
-      updatedAt: new Date().toISOString()
-    }));
+  const handleStatusChange = async (newStatus: string) => {
+    if (!lead) return;
+    
+    try {
+      await updateLead(lead.id, { 
+        status: newStatus as Lead['status']
+      });
+      toast.success('Статус обновлен');
+      refetch(); // Обновляем данные
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      toast.error('Ошибка обновления статуса');
+    }
   };
 
   const formatDateOnly = (dateStr: string) => {
@@ -71,6 +60,45 @@ export function AdminLeadDetails() {
     return `${day} ${month} ${year}`;
   };
 
+  // Loading состояние
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error состояние
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-destructive text-lg mb-4">Ошибка загрузки</p>
+          <p className="text-muted-foreground mb-6">{error.message}</p>
+          <Link to="/admin/leads">
+            <Button>Вернуться к списку</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!lead) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl mb-4">Лид не найден</h1>
+          <Link to="/admin/leads">
+            <Button>Вернуться к списку</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Навигация */}
@@ -79,7 +107,7 @@ export function AdminLeadDetails() {
           <ArrowLeft className="h-4 w-4 mr-1" />
           Назад к списку лидов
         </Link>
-        <h1 className="text-2xl mt-2">Лид #{lead.id}</h1>
+        <h1 className="text-2xl mt-2">Лид #{lead.id.slice(0, 8)}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -172,7 +200,7 @@ export function AdminLeadDetails() {
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm text-muted-foreground block mb-2">Статус заявки</label>
-                <Select value={lead.status} onValueChange={handleStatusChange}>
+                <Select value={lead.status} onValueChange={handleStatusChange} disabled={updating}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -190,9 +218,6 @@ export function AdminLeadDetails() {
                 <div className="space-y-2">
                   <Button className="w-full" size="sm">
                     Перезвонить {lead.customerPhone}
-                  </Button>
-                  <Button className="w-full" size="sm" variant="outline">
-                    WhatsApp @annapetrenko
                   </Button>
                 </div>
               </div>
