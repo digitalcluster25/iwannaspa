@@ -5,18 +5,19 @@ import { Button } from './ui/button';
 import { MapPin } from 'lucide-react';
 import { Spa } from '../types/spa';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { useCategories } from '../hooks/useReferences';
 
 interface SpaCardProps {
   spa: Spa;
 }
 
 export function SpaCard({ spa }: SpaCardProps) {
-  const categoryLabels = {
-    wellness: 'Wellness',
-    thermal: 'Термальный',
-    medical: 'Медицинский',
-    beauty: 'Beauty'
-  };
+  const { categories } = useCategories();
+
+  // Получаем первую категорию из массива или fallback на старое поле
+  const primaryCategoryValue = (spa.categories && spa.categories[0]) || spa.category;
+  const primaryCategory = categories.find(c => c.value === primaryCategoryValue);
+  const categoryLabel = primaryCategory?.name || 'СПА';
 
   // Вычисляем диапазон цен услуг
   const servicePrices = spa.services?.map(service => service.price) || [];
@@ -32,7 +33,7 @@ export function SpaCard({ spa }: SpaCardProps) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <Badge className="absolute top-3 left-3" variant="secondary">
-          {categoryLabels[spa.category]}
+          {categoryLabel}
         </Badge>
         {spa.featured && (
           <Badge className="absolute bottom-3 left-3 bg-primary">
