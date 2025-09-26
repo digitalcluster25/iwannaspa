@@ -118,14 +118,14 @@ export const spaService = {
       console.log('Saving contacts:', spa.contactInfo)
       const { error: contactError } = await supabase
         .from('spa_contacts')
-        .insert({
+        .upsert({
           spa_id: spaData.id,
           phone: spa.contactInfo.phone,
           email: spa.contactInfo.email,
           working_hours: spa.contactInfo.workingHours,
           whatsapp: spa.contactInfo.whatsapp,
           telegram: spa.contactInfo.telegram
-        })
+        }, { onConflict: 'spa_id' })
       
       if (contactError) throw contactError
     }
