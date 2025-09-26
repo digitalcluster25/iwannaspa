@@ -49,6 +49,8 @@ export const spaService = {
 
   // Создать СПА
   async create(spa: Partial<Spa>) {
+    console.log('Creating SPA with data:', spa)
+    
     const { data: spaData, error: spaError } = await supabase
       .from('spas')
       .insert({
@@ -71,6 +73,7 @@ export const spaService = {
 
     // Добавляем услуги
     if (spa.services && spa.services.length > 0) {
+      console.log('Saving services:', spa.services.length)
       const { error: servicesError } = await supabase
         .from('spa_services')
         .insert(
@@ -87,8 +90,32 @@ export const spaService = {
       if (servicesError) throw servicesError
     }
 
+    // Добавляем удобства
+    if (spa.amenities && spa.amenities.length > 0) {
+      console.log('Saving amenities:', spa.amenities)
+      // Получаем ID удобств по названиям
+      const { data: amenitiesData } = await supabase
+        .from('amenities')
+        .select('id, name')
+        .in('name', spa.amenities)
+      
+      if (amenitiesData && amenitiesData.length > 0) {
+        const { error: amenitiesError } = await supabase
+          .from('spa_amenities')
+          .insert(
+            amenitiesData.map(a => ({
+              spa_id: spaData.id,
+              amenity_id: a.id
+            }))
+          )
+        
+        if (amenitiesError) throw amenitiesError
+      }
+    }
+
     // Добавляем контакты
     if (spa.contactInfo) {
+      console.log('Saving contacts:', spa.contactInfo)
       const { error: contactError } = await supabase
         .from('spa_contacts')
         .insert({
@@ -145,6 +172,29 @@ export const spaService = {
             image: s.image
           }))
         )
+      }
+    }
+
+    // Обновляем удобства
+    if (spa.amenities) {
+      // Удаляем старые удобства
+      await supabase.from('spa_amenities').delete().eq('spa_id', id)
+      
+      // Добавляем новые
+      if (spa.amenities.length > 0) {
+        const { data: amenitiesData } = await supabase
+          .from('amenities')
+          .select('id, name')
+          .in('name', spa.amenities)
+        
+        if (amenitiesData && amenitiesData.length > 0) {
+          await supabase.from('spa_amenities').insert(
+            amenitiesData.map(a => ({
+              spa_id: id,
+              amenity_id: a.id
+            }))
+          )
+        }
       }
     }
 

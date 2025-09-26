@@ -15,9 +15,12 @@ export function useSpas() {
     try {
       setLoading(true)
       setError(null)
+      console.log('🔄 Loading spas from Supabase...')
       const data = await spaService.getAll()
+      console.log('✅ Spas loaded:', data.length)
       setSpas(data)
     } catch (err) {
+      console.error('❌ Error loading spas:', err)
       setError(err as Error)
       console.error('Error loading spas:', err)
     } finally {
@@ -30,7 +33,7 @@ export function useSpas() {
 
 export function useSpa(id: string | undefined) {
   const [spa, setSpa] = useState<Spa | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!!id) // Только true если есть id
   const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {

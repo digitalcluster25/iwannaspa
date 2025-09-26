@@ -21,9 +21,12 @@ export function useCities() {
   const loadCities = async () => {
     try {
       setLoading(true)
+      console.log('🌆 Loading cities...')
       const data = await cityService.getAll()
+      console.log('✅ Cities loaded:', data.length)
       setCities(data)
     } catch (err) {
+      console.error('❌ Error loading cities:', err)
       setError(err as Error)
     } finally {
       setLoading(false)
@@ -46,9 +49,12 @@ export function useCategories() {
   const loadCategories = async () => {
     try {
       setLoading(true)
+      console.log('📂 Loading categories...')
       const data = await categoryService.getAll()
+      console.log('✅ Categories loaded:', data.length)
       setCategories(data)
     } catch (err) {
+      console.error('❌ Error loading categories:', err)
       setError(err as Error)
     } finally {
       setLoading(false)
@@ -71,9 +77,12 @@ export function usePurposes() {
   const loadPurposes = async () => {
     try {
       setLoading(true)
+      console.log('🎯 Loading purposes...')
       const data = await purposeService.getAll()
+      console.log('✅ Purposes loaded:', data.length)
       setPurposes(data)
     } catch (err) {
+      console.error('❌ Error loading purposes:', err)
       setError(err as Error)
     } finally {
       setLoading(false)
@@ -96,9 +105,12 @@ export function useAmenities() {
   const loadAmenities = async () => {
     try {
       setLoading(true)
+      console.log('✨ Loading amenities...')
       const data = await amenityService.getAll()
+      console.log('✅ Amenities loaded:', data.length)
       setAmenities(data)
     } catch (err) {
+      console.error('❌ Error loading amenities:', err)
       setError(err as Error)
     } finally {
       setLoading(false)
@@ -121,9 +133,12 @@ export function useServiceTemplates() {
   const loadServices = async () => {
     try {
       setLoading(true)
+      console.log('🛠️ Loading service templates...')
       const data = await serviceTemplateService.getAll()
+      console.log('✅ Service templates loaded:', data.length)
       setServices(data)
     } catch (err) {
+      console.error('❌ Error loading service templates:', err)
       setError(err as Error)
     } finally {
       setLoading(false)

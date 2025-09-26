@@ -1,4 +1,4 @@
-import { supabase } from '../src/lib/supabase.js'
+import { createClient } from '@supabase/supabase-js'
 import { 
   mockSpas, 
   mockCities, 
@@ -7,6 +7,12 @@ import {
   mockAmenities,
   mockServiceTemplates
 } from '../src/data/mockData.js'
+
+// Для Node.js используем прямые значения из .env.local
+const supabaseUrl = 'https://ewkeuupfristqqonkcph.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3a2V1dXBmcmlzdHFxb25rY3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDI0MDQsImV4cCI6MjA3NDQxODQwNH0.YduF49boh1jK40-Lk1nbie9JVtF0AsPyn_08JC-HX6E'
+
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function migrate() {
   console.log('🚀 Начинаем миграцию данных в Supabase...\n')
