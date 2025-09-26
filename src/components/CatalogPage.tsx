@@ -5,7 +5,8 @@ import { Input } from './ui/input';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { SpaCard } from './SpaCard';
 import { SpaFiltersComponent } from './SpaFilters';
-import { mockSpas } from '../data/mockData';
+// import { mockSpas } from '../data/mockData'; // Закомментировано - теперь используем Supabase
+import { useSpas } from '../hooks/useSpas';
 import { SpaFilters } from '../types/spa';
 
 export function CatalogPage() {
@@ -14,8 +15,11 @@ export function CatalogPage() {
   const [filters, setFilters] = useState<SpaFilters>({});
   const [showFilters, setShowFilters] = useState(false);
 
+  // Получаем данные из Supabase
+  const { spas, loading, error } = useSpas();
+
   const filteredAndSortedSpas = useMemo(() => {
-    let result = [...mockSpas];
+    let result = [...spas];
 
     // Apply search
     if (searchTerm) {
@@ -63,7 +67,31 @@ export function CatalogPage() {
     });
 
     return result;
-  }, [searchTerm, sortBy, filters]);
+  }, [spas, searchTerm, sortBy, filters]);
+
+  // Loading состояние
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка СПА комплексов...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error состояние
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-destructive text-lg mb-4">Ошибка загрузки данных</p>
+          <p className="text-muted-foreground mb-6">{error.message}</p>
+          <Button onClick={() => window.location.reload()}>Попробовать снова</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

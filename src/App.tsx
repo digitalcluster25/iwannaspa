@@ -16,6 +16,7 @@ import { OfferPage } from './components/OfferPage';
 import { Header } from './components/Header';
 import { AdminHeader } from './components/AdminHeader';
 import { Footer } from './components/Footer';
+import { Toaster } from 'sonner';
 
 function AppContent() {
   const location = useLocation();
@@ -54,6 +55,7 @@ export default function App() {
   return (
     <Router>
       <AppContent />
+      <Toaster position="top-right" richColors />
     </Router>
   );
 }

@@ -6,10 +6,15 @@ import { Badge } from './ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Plus, Edit, Trash2, Star, MapPin } from 'lucide-react';
-import { mockSpas } from '../data/mockData';
+// import { mockSpas } from '../data/mockData'; // Закомментировано - теперь используем Supabase
+import { useSpas, useSpaActions } from '../hooks/useSpas';
+import { toast } from 'sonner';
 
 export function AdminPage() {
-  const [spas, setSpas] = useState(mockSpas);
+  // Получаем данные из Supabase
+  const { spas, loading, error, refetch } = useSpas();
+  const { deleteSpa, loading: deleteLoading } = useSpaActions();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const categoryLabels = {
     wellness: 'Wellness',
@@ -18,9 +23,43 @@ export function AdminPage() {
     beauty: 'Beauty'
   };
 
-  const handleDelete = (id: string) => {
-    setSpas(prev => prev.filter(spa => spa.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      setDeletingId(id);
+      await deleteSpa(id);
+      await refetch();
+      toast.success('СПА успешно удален');
+    } catch (error) {
+      console.error('Error deleting spa:', error);
+      toast.error('Ошибка при удалении СПА');
+    } finally {
+      setDeletingId(null);
+    }
   };
+
+  // Loading состояние
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error состояние
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-destructive text-lg mb-4">Ошибка загрузки</p>
+          <p className="text-muted-foreground mb-6">{error.message}</p>
+          <Button onClick={() => refetch()}>Попробовать снова</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -109,7 +148,11 @@ export function AdminPage() {
                         </Link>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              disabled={deletingId === spa.id}
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </AlertDialogTrigger>

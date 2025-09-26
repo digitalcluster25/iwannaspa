@@ -8,7 +8,8 @@ import { Badge } from './ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 import { MapPin, Phone, Mail, Car, Coffee, ArrowLeft, Plus, Minus, Calendar, X } from 'lucide-react';
-import { mockSpas } from '../data/mockData';
+// import { mockSpas } from '../data/mockData'; // Закомментировано - теперь используем Supabase
+import { useSpa } from '../hooks/useSpas';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { SpaService } from '../types/spa';
 
@@ -18,13 +19,41 @@ interface SelectedService extends SpaService {
 
 export function SpaPage() {
   const { id } = useParams();
-  const spa = mockSpas.find(s => s.id === id);
+  
+  // Получаем данные из Supabase
+  const { spa, loading, error } = useSpa(id);
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
   const [visitDate, setVisitDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split('T')[0]; // Формат YYYY-MM-DD
   });
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+
+  // Loading состояние
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error состояние
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-destructive text-lg mb-4">Ошибка загрузки</p>
+          <p className="text-muted-foreground mb-6">{error.message}</p>
+          <Link to="/catalog">
+            <Button>Вернуться к каталогу</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!spa) {
     return (

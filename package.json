@@ -4,6 +4,7 @@
       "version": "0.1.0",
       "private": true,
       "dependencies": {
+          "@supabase/supabase-js": "^2.39.0",
           "@radix-ui/react-accordion": "^1.2.3",
           "@radix-ui/react-alert-dialog": "^1.1.6",
           "@radix-ui/react-aspect-ratio": "^1.1.2",
@@ -63,7 +64,8 @@
           "ts-jest": "^29.1.0",
           "@testing-library/react": "^13.4.0",
           "@testing-library/jest-dom": "^5.16.5",
-          "@testing-library/user-event": "^14.4.3"
+          "@testing-library/user-event": "^14.4.3",
+          "tsx": "^4.7.0"
       },
       "scripts": {
           "dev": "vite",
@@ -77,6 +79,7 @@
           "test": "jest",
           "test:ci": "jest --ci --coverage --watchAll=false",
           "test:watch": "jest --watch",
+          "migrate:mock-data": "tsx scripts/migrate-mock-data.ts",
           "prepare": "npm run build"
       }
   }

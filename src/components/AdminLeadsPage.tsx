@@ -7,65 +7,11 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Search } from 'lucide-react';
 import type { Lead } from '../types/spa';
-
-// Mock данные для лидов
-const mockLeads: Lead[] = [
-  {
-    id: '1',
-    spaId: '1',
-    spaName: 'Терма СПА',
-    customerName: 'Анна Петрова',
-    customerPhone: '+380501234567',
-    customerEmail: 'anna@example.com',
-    selectedServices: [
-      { id: '1', name: 'Классический массаж', price: 800 },
-      { id: '2', name: 'Парафинотерапия', price: 600 }
-    ],
-    totalAmount: 1400,
-    message: 'Хочу записаться на завтра',
-    status: 'new',
-    createdAt: '2024-01-15T10:30:00Z',
-    updatedAt: '2024-01-15T10:30:00Z',
-    visitDate: '2024-01-16T14:00:00Z'
-  },
-  {
-    id: '2',
-    spaId: '2',
-    spaName: 'Aqua Relax',
-    customerName: 'Олег Иванов',
-    customerPhone: '+380502345678',
-    selectedServices: [
-      { id: '3', name: 'Гидромассаж', price: 1200 }
-    ],
-    totalAmount: 1200,
-    status: 'contacted',
-    createdAt: '2024-01-15T09:15:00Z',
-    updatedAt: '2024-01-15T11:00:00Z',
-    visitDate: '2024-01-18T11:30:00Z'
-  },
-  {
-    id: '3',
-    spaId: '1',
-    spaName: 'Терма СПА',
-    customerName: 'Мария Коваленко',
-    customerPhone: '+380503456789',
-    customerEmail: 'maria@example.com',
-    selectedServices: [
-      { id: '1', name: 'Классический массаж', price: 800 },
-      { id: '4', name: 'Ароматерапия', price: 500 },
-      { id: '5', name: 'SPA-пакет Релакс', price: 1500 }
-    ],
-    totalAmount: 2800,
-    message: 'Хочу подарочный сертификат',
-    status: 'confirmed',
-    createdAt: '2024-01-14T16:45:00Z',
-    updatedAt: '2024-01-15T08:30:00Z',
-    visitDate: '2024-01-20T10:00:00Z'
-  }
-];
+import { useLeads } from '../hooks/useLeads';
 
 export function AdminLeadsPage() {
-  const [leads] = useState<Lead[]>(mockLeads);
+  // Получаем данные из Supabase
+  const { leads, loading, error } = useLeads();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -114,6 +60,29 @@ export function AdminLeadsPage() {
     
     return `${day} ${month} ${year}`;
   };
+
+  // Loading состояние
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error состояние
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-destructive text-lg mb-4">Ошибка загрузки</p>
+          <p className="text-muted-foreground mb-6">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
