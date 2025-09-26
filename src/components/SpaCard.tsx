@@ -14,10 +14,13 @@ interface SpaCardProps {
 export function SpaCard({ spa }: SpaCardProps) {
   const { categories } = useCategories();
 
-  // Получаем первую категорию из массива или fallback на старое поле
-  const primaryCategoryValue = (spa.categories && spa.categories[0]) || spa.category;
-  const primaryCategory = categories.find(c => c.value === primaryCategoryValue);
-  const categoryLabel = primaryCategory?.name || 'СПА';
+  // Получаем все категории СПА
+  const spaCategories = (spa.categories || (spa.category ? [spa.category] : []))
+    .map(value => categories.find(c => c.value === value))
+    .filter(Boolean)
+    .slice(0, 2); // Показываем максимум 2 категории
+  
+  const hasMoreCategories = (spa.categories?.length || 0) > 2;
 
   // Вычисляем диапазон цен услуг
   const servicePrices = spa.services?.map(service => service.price) || [];
@@ -32,9 +35,16 @@ export function SpaCard({ spa }: SpaCardProps) {
           alt={spa.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <Badge className="absolute top-3 left-3" variant="secondary">
-          {categoryLabel}
-        </Badge>
+        {spaCategories.map((cat, idx) => (
+          <Badge key={idx} className="absolute top-3 left-3" variant="secondary" style={{ left: `${12 + idx * 95}px` }}>
+            {cat?.name}
+          </Badge>
+        ))}
+        {hasMoreCategories && (
+          <Badge className="absolute top-3 left-3" variant="secondary" style={{ left: `${12 + spaCategories.length * 95}px` }}>
+            +{(spa.categories?.length || 0) - 2}
+          </Badge>
+        )}
         {spa.featured && (
           <Badge className="absolute bottom-3 left-3 bg-primary">
             Рекомендуем
