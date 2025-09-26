@@ -239,11 +239,14 @@ export function SpaPage() {
                 {spa.amenities.map((amenity, index) => (
                   <AccordionItem key={index} value={`amenity-${index}`}>
                     <AccordionTrigger className="text-left">
-                      {amenity}
+                      {typeof amenity === 'string' ? amenity : amenity.name}
                     </AccordionTrigger>
                     <AccordionContent>
                       <p className="text-muted-foreground">
-                        Подробная информация об услуге "{amenity}" - профессиональное обслуживание с использованием качественного оборудования.
+                        {typeof amenity === 'object' && amenity.description 
+                          ? amenity.description
+                          : `Подробная информация об услуге "${typeof amenity === 'string' ? amenity : amenity.name}" - профессиональное обслуживание с использованием качественного оборудования.`
+                        }
                       </p>
                     </AccordionContent>
                   </AccordionItem>

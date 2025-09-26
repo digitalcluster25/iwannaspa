@@ -23,9 +23,12 @@ export interface Spa {
   reviewCount: number;
   location: string;
   images: string[];
-  amenities: string[];
+  amenities: Array<{name: string; description?: string}>; // Изменили на объекты
   services: SpaService[];
   contactInfo: ContactInfo;
+  categories: Array<'wellness' | 'medical' | 'beauty' | 'thermal'>; // Мультивыбор
+  purposes: Array<'relaxation' | 'health' | 'beauty' | 'detox' | 'fitness'>; // Мультивыбор
+  // Старые поля для обратной совместимости
   category: 'wellness' | 'medical' | 'beauty' | 'thermal';
   purpose: 'relaxation' | 'health' | 'beauty' | 'detox' | 'fitness';
   featured: boolean;
@@ -66,6 +69,7 @@ export interface Purpose {
 export interface Amenity {
   id: string;
   name: string;
+  description?: string;
   active: boolean;
 }
 
