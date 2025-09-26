@@ -36,8 +36,10 @@ export function AdminSpaEdit() {
     name: '',
     description: '',
     location: '',
-    category: 'wellness',
-    purpose: 'relaxation',
+    categories: [], // Массив для мультивыбора
+    purposes: [], // Массив для мультивыбора
+    category: 'wellness', // Для обратной совместимости
+    purpose: 'relaxation', // Для обратной совместимости
     price: 0,
     rating: 5.0,
     reviewCount: 0,
@@ -66,7 +68,12 @@ export function AdminSpaEdit() {
 
   useEffect(() => {
     if (!isNew && spa) {
-      setFormData(spa);
+      setFormData({
+        ...spa,
+        // Инициализируем categories и purposes для мультивыбора
+        categories: spa.categories || (spa.category ? [spa.category] : []),
+        purposes: spa.purposes || (spa.purpose ? [spa.purpose] : [])
+      });
     }
   }, [spa, isNew]);
 
@@ -191,8 +198,10 @@ export function AdminSpaEdit() {
         name: formData.name || '',
         description: formData.description || '',
         location: formData.location || '',
-        category: formData.category as any,
-        purpose: formData.purpose as any,
+        categories: formData.categories || [],
+        purposes: formData.purposes || [],
+        category: (formData.categories && formData.categories[0]) || formData.category as any,
+        purpose: (formData.purposes && formData.purposes[0]) || formData.purpose as any,
         price: formData.price || 0,
         rating: formData.rating || 5.0,
         reviewCount: formData.reviewCount || 0,
@@ -327,42 +336,68 @@ export function AdminSpaEdit() {
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Категория *</Label>
-                      <Select 
-                        value={formData.category} 
-                        onValueChange={(value) => handleInputChange('category', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categoryOptions.map((category) => (
-                            <SelectItem key={category.id} value={category.value}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-3">
+                      <Label>Категории * (выберите одну или несколько)</Label>
+                      <div className="space-y-2 p-3 border rounded-md">
+                        {categoryOptions.map((category) => {
+                          const isChecked = formData.categories?.includes(category.value as any) || false;
+                          return (
+                            <div key={category.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`category-${category.id}`}
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  const newCategories = e.target.checked
+                                    ? [...(formData.categories || []), category.value as any]
+                                    : (formData.categories || []).filter(c => c !== category.value);
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    categories: newCategories,
+                                    category: newCategories[0] as any || 'wellness' // Первая для совместимости
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                              <Label htmlFor={`category-${category.id}`} className="text-sm font-normal cursor-pointer">
+                                {category.name}
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="purpose">Цель *</Label>
-                      <Select 
-                        value={formData.purpose} 
-                        onValueChange={(value) => handleInputChange('purpose', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите цель" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {purposeOptions.map((purpose) => (
-                            <SelectItem key={purpose.id} value={purpose.value}>
-                              {purpose.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-3">
+                      <Label>Цели * (выберите одну или несколько)</Label>
+                      <div className="space-y-2 p-3 border rounded-md">
+                        {purposeOptions.map((purpose) => {
+                          const isChecked = formData.purposes?.includes(purpose.value as any) || false;
+                          return (
+                            <div key={purpose.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`purpose-${purpose.id}`}
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  const newPurposes = e.target.checked
+                                    ? [...(formData.purposes || []), purpose.value as any]
+                                    : (formData.purposes || []).filter(p => p !== purpose.value);
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    purposes: newPurposes,
+                                    purpose: newPurposes[0] as any || 'relaxation' // Первая для совместимости
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                              <Label htmlFor={`purpose-${purpose.id}`} className="text-sm font-normal cursor-pointer">
+                                {purpose.name}
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
