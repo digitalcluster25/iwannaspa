@@ -32,10 +32,14 @@ export function CatalogPage() {
 
     // Apply filters
     if (filters.category) {
-      result = result.filter(spa => spa.category === filters.category);
+      result = result.filter(spa => 
+        spa.categories?.includes(filters.category as any) || spa.category === filters.category
+      );
     }
     if (filters.purpose) {
-      result = result.filter(spa => spa.purpose === filters.purpose);
+      result = result.filter(spa => 
+        spa.purposes?.includes(filters.purpose as any) || spa.purpose === filters.purpose
+      );
     }
     if (filters.location) {
       result = result.filter(spa => spa.location === filters.location);

@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { X } from 'lucide-react';
 import { SpaFilters } from '../types/spa';
+import { useCategories, usePurposes, useCities } from '../hooks/useReferences';
 
 interface SpaFiltersProps {
   filters: SpaFilters;
@@ -15,27 +16,14 @@ interface SpaFiltersProps {
 export function SpaFiltersComponent({ filters, onFiltersChange }: SpaFiltersProps) {
   const [priceRange, setPriceRange] = useState([filters.minPrice || 1800, filters.maxPrice || 3500]);
 
-  const categories = [
-    { value: 'wellness', label: 'Wellness' },
-    { value: 'thermal', label: 'Термальный' },
-    { value: 'medical', label: 'Медицинский' },
-    { value: 'beauty', label: 'Beauty' }
-  ];
+  // Загружаем данные из справочников
+  const { categories: categoriesData } = useCategories();
+  const { purposes: purposesData } = usePurposes();
+  const { cities: citiesData } = useCities();
 
-  const purposes = [
-    { value: 'relaxation', label: 'Релаксация' },
-    { value: 'health', label: 'Здоровье' },
-    { value: 'beauty', label: 'Красота' },
-    { value: 'detox', label: 'Детокс' },
-    { value: 'fitness', label: 'Фитнес' }
-  ];
-
-  const locations = [
-    'Киев',
-    'Одесса',
-    'Львов',
-    'Буковель'
-  ];
+  const categories = categoriesData.filter(c => c.active).map(c => ({ value: c.value, label: c.name }));
+  const purposes = purposesData.filter(p => p.active).map(p => ({ value: p.value, label: p.name }));
+  const locations = citiesData.filter(c => c.active).map(c => c.name);
 
   const handlePriceChange = (value: number[]) => {
     setPriceRange(value);
