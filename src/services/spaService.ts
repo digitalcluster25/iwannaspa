@@ -339,6 +339,8 @@ export const spaService = {
         email: '',
         workingHours: ''
       },
+      categories: data.categories || (data.category ? [data.category] : []),
+      purposes: data.purposes || (data.purpose ? [data.purpose] : []),
       category: data.category as any,
       purpose: data.purpose as any,
       featured: data.featured,
