@@ -117,14 +117,17 @@ export const spaService = {
     if (spa.contactInfo) {
       console.log('Saving contacts:', spa.contactInfo)
       
-      // Сначала проверяем, существуют ли контакты
-      const { data: existingContact } = await supabase
+      // Сначала проверяем, существуют ли контакты (игнорируем ошибку если нет)
+      const { data: existingContact, error: checkError } = await supabase
         .from('spa_contacts')
         .select('id')
         .eq('spa_id', spaData.id)
-        .single()
+        .maybeSingle() // maybeSingle() вместо single() - не выдает ошибку если нет записи
+      
+      console.log('Existing contact check:', { exists: !!existingContact, checkError })
       
       if (existingContact) {
+        console.log('Updating existing contact')
         // Обновляем существующие
         const { error: contactError } = await supabase
           .from('spa_contacts')
@@ -137,8 +140,12 @@ export const spaService = {
           })
           .eq('spa_id', spaData.id)
         
-        if (contactError) throw contactError
+        if (contactError) {
+          console.error('Error updating contact:', contactError)
+          throw contactError
+        }
       } else {
+        console.log('Creating new contact')
         // Создаем новые
         const { error: contactError } = await supabase
           .from('spa_contacts')
@@ -151,7 +158,10 @@ export const spaService = {
             telegram: spa.contactInfo.telegram
           })
         
-        if (contactError) throw contactError
+        if (contactError) {
+          console.error('Error creating contact:', contactError)
+          throw contactError
+        }
       }
     }
 
