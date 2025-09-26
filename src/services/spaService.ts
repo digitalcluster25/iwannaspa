@@ -116,18 +116,43 @@ export const spaService = {
     // Добавляем контакты
     if (spa.contactInfo) {
       console.log('Saving contacts:', spa.contactInfo)
-      const { error: contactError } = await supabase
-        .from('spa_contacts')
-        .upsert({
-          spa_id: spaData.id,
-          phone: spa.contactInfo.phone,
-          email: spa.contactInfo.email,
-          working_hours: spa.contactInfo.workingHours,
-          whatsapp: spa.contactInfo.whatsapp,
-          telegram: spa.contactInfo.telegram
-        }, { onConflict: 'spa_id' })
       
-      if (contactError) throw contactError
+      // Сначала проверяем, существуют ли контакты
+      const { data: existingContact } = await supabase
+        .from('spa_contacts')
+        .select('id')
+        .eq('spa_id', spaData.id)
+        .single()
+      
+      if (existingContact) {
+        // Обновляем существующие
+        const { error: contactError } = await supabase
+          .from('spa_contacts')
+          .update({
+            phone: spa.contactInfo.phone,
+            email: spa.contactInfo.email,
+            working_hours: spa.contactInfo.workingHours,
+            whatsapp: spa.contactInfo.whatsapp,
+            telegram: spa.contactInfo.telegram
+          })
+          .eq('spa_id', spaData.id)
+        
+        if (contactError) throw contactError
+      } else {
+        // Создаем новые
+        const { error: contactError } = await supabase
+          .from('spa_contacts')
+          .insert({
+            spa_id: spaData.id,
+            phone: spa.contactInfo.phone,
+            email: spa.contactInfo.email,
+            working_hours: spa.contactInfo.workingHours,
+            whatsapp: spa.contactInfo.whatsapp,
+            telegram: spa.contactInfo.telegram
+          })
+        
+        if (contactError) throw contactError
+      }
     }
 
     return this.getById(spaData.id)
