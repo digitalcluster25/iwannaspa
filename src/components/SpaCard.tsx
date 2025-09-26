@@ -56,7 +56,7 @@ export function SpaCard({ spa }: SpaCardProps) {
         <div className="flex flex-wrap gap-1">
           {spa.amenities.slice(0, 3).map((amenity, index) => (
             <Badge key={index} variant="outline" className="text-xs">
-              {amenity}
+              {typeof amenity === 'string' ? amenity : amenity.name}
             </Badge>
           ))}
           {spa.amenities.length > 3 && (
