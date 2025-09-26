@@ -1,28 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminCrudPage } from './AdminCrudPage';
-import { mockCities } from '../data/mockData';
+// import { mockCities } from '../data/mockData'; // Закомментировано
+import { useCities } from '../hooks/useReferences';
+import { cityService } from '../services/referenceService';
 import { City } from '../types/spa';
+import { toast } from 'sonner';
 
 export function AdminCitiesPage() {
-  const [cities, setCities] = useState<City[]>(mockCities);
+  const { cities, loading, refetch } = useCities();
 
-  const handleAdd = (newCity: Omit<City, 'id'>) => {
-    const city: City = {
-      id: Date.now().toString(),
-      ...newCity
-    };
-    setCities(prev => [...prev, city]);
+  const handleAdd = async (newCity: Omit<City, 'id'>) => {
+    try {
+      await cityService.create({ name: newCity.name, active: newCity.active });
+      await refetch();
+      toast.success('Город добавлен');
+    } catch (error) {
+      toast.error('Ошибка добавления города');
+    }
   };
 
-  const handleEdit = (id: string, updates: Partial<City>) => {
-    setCities(prev => prev.map(city => 
-      city.id === id ? { ...city, ...updates } : city
-    ));
+  const handleEdit = async (id: string, updates: Partial<City>) => {
+    try {
+      await cityService.update(id, updates);
+      await refetch();
+      toast.success('Город обновлен');
+    } catch (error) {
+      toast.error('Ошибка обновления города');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setCities(prev => prev.filter(city => city.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await cityService.delete(id);
+      await refetch();
+      toast.success('Город удален');
+    } catch (error) {
+      toast.error('Ошибка удаления города');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AdminCrudPage

@@ -1,32 +1,60 @@
-import { useState } from 'react';
 import { AdminCrudPage } from './AdminCrudPage';
-import { mockPurposes } from '../data/mockData';
+import { usePurposes } from '../hooks/useReferences';
+import { purposeService } from '../services/referenceService';
 import { Purpose } from '../types/spa';
+import { toast } from 'sonner';
 
 export function AdminPurposesPage() {
-  const [purposes, setPurposes] = useState<Purpose[]>(mockPurposes);
+  const { purposes, loading, refetch } = usePurposes();
 
-  const handleAdd = (newPurpose: Omit<Purpose, 'id'>) => {
-    const purpose: Purpose = {
-      id: Date.now().toString(),
-      ...newPurpose
-    };
-    setPurposes(prev => [...prev, purpose]);
+  const handleAdd = async (newPurpose: Omit<Purpose, 'id'>) => {
+    try {
+      await purposeService.create({ 
+        name: newPurpose.name,
+        label: newPurpose.name, 
+        value: newPurpose.value, 
+        active: newPurpose.active 
+      });
+      await refetch();
+      toast.success('Назначение добавлено');
+    } catch (error) {
+      toast.error('Ошибка добавления назначения');
+    }
   };
 
-  const handleEdit = (id: string, updates: Partial<Purpose>) => {
-    setPurposes(prev => prev.map(purpose => 
-      purpose.id === id ? { ...purpose, ...updates } : purpose
-    ));
+  const handleEdit = async (id: string, updates: Partial<Purpose>) => {
+    try {
+      await purposeService.update(id, updates);
+      await refetch();
+      toast.success('Назначение обновлено');
+    } catch (error) {
+      toast.error('Ошибка обновления назначения');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setPurposes(prev => prev.filter(purpose => purpose.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await purposeService.delete(id);
+      await refetch();
+      toast.success('Назначение удалено');
+    } catch (error) {
+      toast.error('Ошибка удаления назначения');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AdminCrudPage
-      title="Цели"
+      title="Назначения"
       items={purposes}
       onAdd={handleAdd}
       onEdit={handleEdit}

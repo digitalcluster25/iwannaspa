@@ -10,8 +10,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './
 import { MapPin, Phone, Mail, Car, Coffee, ArrowLeft, Plus, Minus, Calendar, X } from 'lucide-react';
 // import { mockSpas } from '../data/mockData'; // Закомментировано - теперь используем Supabase
 import { useSpa } from '../hooks/useSpas';
+import { useLeadActions } from '../hooks/useLeads';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { SpaService } from '../types/spa';
+import { toast } from 'sonner';
 
 interface SelectedService extends SpaService {
   quantity: number;
@@ -22,12 +24,17 @@ export function SpaPage() {
   
   // Получаем данные из Supabase
   const { spa, loading, error } = useSpa(id);
+  const { createLead, loading: creatingLead } = useLeadActions();
+  
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
   const [visitDate, setVisitDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split('T')[0]; // Формат YYYY-MM-DD
   });
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerMessage, setCustomerMessage] = useState('');
 
   // Loading состояние
   if (loading) {
@@ -110,13 +117,45 @@ export function SpaPage() {
     return selectedServices.reduce((total, service) => total + (service.price * service.quantity), 0);
   };
 
-  const handleCallbackRequest = () => {
-    setIsFormSubmitted(true);
+  const handleCallbackRequest = async () => {
+    if (!customerName.trim() || !customerPhone.trim()) {
+      toast.error('Укажите имя и телефон');
+      return;
+    }
+
+    if (!spa) return;
+
+    try {
+      await createLead({
+        spaId: spa.id,
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim(),
+        customerEmail: undefined,
+        selectedServices: selectedServices.map(s => ({
+          id: s.id,
+          name: s.name,
+          price: s.price
+        })),
+        totalAmount: getTotalPrice(),
+        message: customerMessage.trim() || undefined,
+        status: 'new',
+        visitDate: visitDate
+      });
+
+      setIsFormSubmitted(true);
+      toast.success('Заявка отправлена!');
+    } catch (error) {
+      console.error('Error creating lead:', error);
+      toast.error('Ошибка отправки заявки');
+    }
   };
 
   const resetForm = () => {
     setIsFormSubmitted(false);
     setSelectedServices([]);
+    setCustomerName('');
+    setCustomerPhone('');
+    setCustomerMessage('');
     setVisitDate(() => {
       const today = new Date();
       return today.toISOString().split('T')[0];
@@ -322,6 +361,8 @@ export function SpaPage() {
                         id="client-name"
                         placeholder="Введите ваше имя"
                         className="w-full"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
                       />
                     </div>
                     
@@ -334,6 +375,8 @@ export function SpaPage() {
                         type="tel"
                         placeholder="+380 XX XXX XX XX"
                         className="w-full"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
                       />
                     </div>
 
@@ -362,6 +405,8 @@ export function SpaPage() {
                             placeholder="Дополнительная информация или пожелания..."
                             rows={3}
                             className="w-full"
+                            value={customerMessage}
+                            onChange={(e) => setCustomerMessage(e.target.value)}
                           />
                         </div>
                       </>
@@ -369,9 +414,9 @@ export function SpaPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Button className="w-full" size="sm" onClick={handleCallbackRequest}>
+                    <Button className="w-full" size="sm" onClick={handleCallbackRequest} disabled={creatingLead}>
                       <Phone className="h-4 w-4 mr-2" />
-                      Перезвоните мне
+                      {creatingLead ? 'Отправка...' : 'Перезвоните мне'}
                     </Button>
                     <Button variant="outline" className="w-full" size="sm" style={{backgroundColor: '#25D366', borderColor: '#25D366', color: 'white'}}>
                       <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">

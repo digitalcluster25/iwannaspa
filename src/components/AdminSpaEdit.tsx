@@ -12,13 +12,25 @@ import { Separator } from './ui/separator';
 
 import { ArrowLeft, Save, X, Plus, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { mockSpas, mockCities, mockCategories, mockPurposes, mockAmenities, mockServiceTemplates } from '../data/mockData';
+// import { mockSpas, mockCities, mockCategories, mockPurposes, mockAmenities, mockServiceTemplates } from '../data/mockData'; // Закомментировано
+import { useSpa, useSpaActions } from '../hooks/useSpas';
+import { useCities, useCategories, usePurposes, useAmenities, useServiceTemplates } from '../hooks/useReferences';
 import { Spa, SpaService, ContactInfo } from '../types/spa';
+import { toast } from 'sonner';
 
 export function AdminSpaEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = !id;
+
+  // Получаем данные из Supabase
+  const { spa, loading: spaLoading } = useSpa(id);
+  const { cities, loading: citiesLoading } = useCities();
+  const { categories, loading: categoriesLoading } = useCategories();
+  const { purposes, loading: purposesLoading } = usePurposes();
+  const { amenities, loading: amenitiesLoading } = useAmenities();
+  const { services: serviceTemplates, loading: servicesLoading } = useServiceTemplates();
+  const { createSpa, updateSpa, loading: saving } = useSpaActions();
 
   const [formData, setFormData] = useState<Partial<Spa>>({
     name: '',
@@ -53,19 +65,16 @@ export function AdminSpaEdit() {
   });
 
   useEffect(() => {
-    if (!isNew && id) {
-      const spa = mockSpas.find(s => s.id === id);
-      if (spa) {
-        setFormData(spa);
-      }
+    if (!isNew && spa) {
+      setFormData(spa);
     }
-  }, [id, isNew]);
+  }, [spa, isNew]);
 
-  const categoryOptions = mockCategories.filter(cat => cat.active);
-  const locationOptions = mockCities.filter(city => city.active);
-  const purposeOptions = mockPurposes.filter(purpose => purpose.active);
-  const amenityOptions = mockAmenities.filter(amenity => amenity.active);
-  const serviceTemplateOptions = mockServiceTemplates.filter(service => service.active);
+  const categoryOptions = categories.filter(cat => cat.active);
+  const locationOptions = cities.filter(city => city.active);
+  const purposeOptions = purposes.filter(purpose => purpose.active);
+  const amenityOptions = amenities.filter(amenity => amenity.active);
+  const serviceTemplateOptions = serviceTemplates.filter(service => service.active);
 
   const handleInputChange = (field: keyof Spa, value: any) => {
     setFormData(prev => ({
@@ -174,32 +183,54 @@ export function AdminSpaEdit() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const spaData: Spa = {
-      id: isNew ? `spa-${Date.now()}` : id!,
-      name: formData.name || '',
-      description: formData.description || '',
-      location: formData.location || '',
-      category: formData.category || 'wellness',
-      price: formData.price || 0,
-      rating: formData.rating || 5.0,
-      reviewCount: formData.reviewCount || 0,
-      images: formData.images?.filter(img => img.trim()) || [],
-      amenities: formData.amenities || [],
-      services: formData.services || [],
-      contactInfo: formData.contactInfo || { phone: '', email: '', workingHours: '' },
-      featured: formData.featured || false,
-      active: formData.active ?? true,
-      createdAt: isNew ? new Date().toISOString() : (formData.createdAt || new Date().toISOString())
-    };
+    try {
+      const spaData: Partial<Spa> = {
+        name: formData.name || '',
+        description: formData.description || '',
+        location: formData.location || '',
+        category: formData.category as any,
+        purpose: formData.purpose as any,
+        price: formData.price || 0,
+        rating: formData.rating || 5.0,
+        reviewCount: formData.reviewCount || 0,
+        images: formData.images?.filter(img => img.trim()) || [],
+        amenities: formData.amenities || [],
+        services: formData.services || [],
+        contactInfo: formData.contactInfo || { phone: '', email: '', workingHours: '' },
+        featured: formData.featured || false,
+        active: formData.active ?? true,
+      };
 
-    // Here you would normally save to a backend
-    console.log(isNew ? 'Creating new SPA:' : 'Updating SPA:', spaData);
-    
-    navigate('/admin');
+      if (isNew) {
+        await createSpa(spaData);
+        toast.success('СПА успешно создан');
+      } else {
+        await updateSpa(id!, spaData);
+        toast.success('СПА успешно обновлен');
+      }
+      
+      navigate('/admin');
+    } catch (error) {
+      console.error('Error saving SPA:', error);
+      toast.error(isNew ? 'Ошибка создания СПА' : 'Ошибка обновления СПА');
+    }
   };
+
+  // Loading состояние
+  const isLoading = spaLoading || citiesLoading || categoriesLoading || purposesLoading || amenitiesLoading || servicesLoading;
+  
+  if (isLoading) {
+    return (
+      <div className="px-4 py-6">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 py-6">
@@ -224,9 +255,9 @@ export function AdminSpaEdit() {
                 Отмена
               </Button>
             </Link>
-            <Button type="submit" form="spa-form" size="lg">
+            <Button type="submit" form="spa-form" size="lg" disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {isNew ? 'Создать СПА' : 'Сохранить изменения'}
+              {saving ? 'Сохранение...' : (isNew ? 'Создать СПА' : 'Сохранить изменения')}
             </Button>
           </div>
         </div>

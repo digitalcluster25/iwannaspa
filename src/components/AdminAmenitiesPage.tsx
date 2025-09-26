@@ -1,28 +1,51 @@
-import { useState } from 'react';
 import { AdminCrudPage } from './AdminCrudPage';
-import { mockAmenities } from '../data/mockData';
+import { useAmenities } from '../hooks/useReferences';
+import { amenityService } from '../services/referenceService';
 import { Amenity } from '../types/spa';
+import { toast } from 'sonner';
 
 export function AdminAmenitiesPage() {
-  const [amenities, setAmenities] = useState<Amenity[]>(mockAmenities);
+  const { amenities, loading, refetch } = useAmenities();
 
-  const handleAdd = (newAmenity: Omit<Amenity, 'id'>) => {
-    const amenity: Amenity = {
-      id: Date.now().toString(),
-      ...newAmenity
-    };
-    setAmenities(prev => [...prev, amenity]);
+  const handleAdd = async (newAmenity: Omit<Amenity, 'id'>) => {
+    try {
+      await amenityService.create({ name: newAmenity.name, active: newAmenity.active });
+      await refetch();
+      toast.success('Удобство добавлено');
+    } catch (error) {
+      toast.error('Ошибка добавления удобства');
+    }
   };
 
-  const handleEdit = (id: string, updates: Partial<Amenity>) => {
-    setAmenities(prev => prev.map(amenity => 
-      amenity.id === id ? { ...amenity, ...updates } : amenity
-    ));
+  const handleEdit = async (id: string, updates: Partial<Amenity>) => {
+    try {
+      await amenityService.update(id, updates);
+      await refetch();
+      toast.success('Удобство обновлено');
+    } catch (error) {
+      toast.error('Ошибка обновления удобства');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setAmenities(prev => prev.filter(amenity => amenity.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await amenityService.delete(id);
+      await refetch();
+      toast.success('Удобство удалено');
+    } catch (error) {
+      toast.error('Ошибка удаления удобства');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AdminCrudPage
