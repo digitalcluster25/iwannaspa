@@ -313,7 +313,10 @@ export const spaService = {
       reviewCount: data.review_count || 0,
       location: data.location || '',
       images: data.images || [],
-      amenities: data.amenities?.map((a: any) => a.amenity?.name).filter(Boolean) || [],
+      amenities: data.amenities?.map((a: any) => ({
+        name: a.amenity?.name,
+        description: a.amenity?.description
+      })).filter((a: any) => a.name) || [],
       services: data.services?.map((s: any) => ({
         id: s.id,
         name: s.name,
