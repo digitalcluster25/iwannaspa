@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -10,6 +11,7 @@ import { useSpas } from '../hooks/useSpas';
 import { SpaFilters } from '../types/spa';
 
 export function CatalogPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('rating');
   const [filters, setFilters] = useState<SpaFilters>({});
@@ -17,6 +19,22 @@ export function CatalogPage() {
 
   // Получаем данные из Supabase
   const { spas, loading, error } = useSpas();
+
+  // Применяем фильтры из URL при загрузке
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category');
+    const purposeFromUrl = searchParams.get('purpose');
+    const locationFromUrl = searchParams.get('location');
+    
+    if (categoryFromUrl || purposeFromUrl || locationFromUrl) {
+      setFilters(prev => ({
+        ...prev,
+        ...(categoryFromUrl && { category: categoryFromUrl }),
+        ...(purposeFromUrl && { purpose: purposeFromUrl }),
+        ...(locationFromUrl && { location: locationFromUrl })
+      }));
+    }
+  }, [searchParams]);
 
   const filteredAndSortedSpas = useMemo(() => {
     let result = [...spas];
@@ -171,6 +189,7 @@ export function CatalogPage() {
             <Button onClick={() => {
               setSearchTerm('');
               setFilters({});
+              setSearchParams({}); // Очищаем URL параметры
             }}>
               Сбросить все фильтры
             </Button>

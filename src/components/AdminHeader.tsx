@@ -1,19 +1,26 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Droplets, Settings, Building2, MapPin, Tag, Target, Wrench, Briefcase, Users } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Droplets, Settings, Building2, MapPin, Tag, Target, Wrench, Briefcase, Users, LogOut } from 'lucide-react';
+import { Button } from './ui/button';
 
 export function AdminHeader() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isActive = (path: string) => location.pathname === path;
 
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    navigate('/auth');
+  };
+
   const navigationItems = [
-    { path: '/admin', label: 'СПА комплексы', icon: Building2 },
-    { path: '/admin/leads', label: 'Лиды', icon: Users },
-    { path: '/admin/cities', label: 'Города', icon: MapPin },
-    { path: '/admin/categories', label: 'Категории', icon: Tag },
-    { path: '/admin/purposes', label: 'Цели', icon: Target },
-    { path: '/admin/amenities', label: 'Удобства', icon: Wrench },
-    { path: '/admin/services', label: 'Услуги', icon: Briefcase },
+    { path: '/adminko', label: 'СПА комплексы', icon: Building2 },
+    { path: '/adminko/leads', label: 'Лиды', icon: Users },
+    { path: '/adminko/cities', label: 'Города', icon: MapPin },
+    { path: '/adminko/categories', label: 'Категории', icon: Tag },
+    { path: '/adminko/purposes', label: 'Цели', icon: Target },
+    { path: '/adminko/amenities', label: 'Удобства', icon: Wrench },
+    { path: '/adminko/services', label: 'Услуги', icon: Briefcase },
   ];
 
   return (
@@ -22,7 +29,7 @@ export function AdminHeader() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Droplets className="h-8 w-8 text-primary" />
-            <Link to="/admin" className="text-xl text-primary">
+            <Link to="/adminko" className="text-xl text-primary">
               Iwanna <span className="text-sm text-muted-foreground">Admin</span>
             </Link>
           </div>
@@ -42,10 +49,19 @@ export function AdminHeader() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <Link to="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Перейти на сайт
             </Link>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Выйти
+            </Button>
           </div>
         </div>
       </div>

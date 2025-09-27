@@ -60,6 +60,10 @@ export const spaService = {
         rating: spa.rating || 0,
         review_count: spa.reviewCount || 0,
         location: spa.location,
+        address: spa.address,
+        address_comment: spa.addressComment,
+        latitude: spa.latitude,
+        longitude: spa.longitude,
         images: spa.images || [],
         categories: spa.categories || (spa.category ? [spa.category] : []),
         purposes: spa.purposes || (spa.purpose ? [spa.purpose] : []),
@@ -94,24 +98,30 @@ export const spaService = {
 
     // Добавляем удобства
     if (spa.amenities && spa.amenities.length > 0) {
-      console.log('Saving amenities:', spa.amenities)
       // Получаем ID удобств по названиям
-      const { data: amenitiesData } = await supabase
+      const { data: amenitiesData, error: amenitiesSearchError } = await supabase
         .from('amenities')
         .select('id, name')
         .in('name', spa.amenities)
       
+      if (amenitiesSearchError) console.error('Error searching amenities:', amenitiesSearchError)
+      
       if (amenitiesData && amenitiesData.length > 0) {
+        const insertData = amenitiesData.map(a => ({
+          spa_id: spaData.id,
+          amenity_id: a.id
+        }))
+        
         const { error: amenitiesError } = await supabase
           .from('spa_amenities')
-          .insert(
-            amenitiesData.map(a => ({
-              spa_id: spaData.id,
-              amenity_id: a.id
-            }))
-          )
+          .insert(insertData)
         
-        if (amenitiesError) throw amenitiesError
+        if (amenitiesError) {
+          console.error('Error inserting spa_amenities:', amenitiesError)
+          throw amenitiesError
+        }
+      } else {
+        console.warn('No amenities found in DB matching:', spa.amenities)
       }
     }
 
@@ -181,6 +191,10 @@ export const spaService = {
         rating: spa.rating,
         review_count: spa.reviewCount,
         location: spa.location,
+        address: spa.address,
+        address_comment: spa.addressComment,
+        latitude: spa.latitude,
+        longitude: spa.longitude,
         images: spa.images,
         categories: spa.categories || (spa.category ? [spa.category] : []),
         purposes: spa.purposes || (spa.purpose ? [spa.purpose] : []),
@@ -217,22 +231,28 @@ export const spaService = {
     // Обновляем удобства
     if (spa.amenities) {
       // Удаляем старые удобства
-      await supabase.from('spa_amenities').delete().eq('spa_id', id)
+      const { error: deleteError } = await supabase.from('spa_amenities').delete().eq('spa_id', id)
+      if (deleteError) console.error('Error deleting old amenities:', deleteError)
       
       // Добавляем новые
       if (spa.amenities.length > 0) {
-        const { data: amenitiesData } = await supabase
+        const { data: amenitiesData, error: searchError } = await supabase
           .from('amenities')
           .select('id, name')
           .in('name', spa.amenities)
         
+        if (searchError) console.error('Error searching amenities:', searchError)
+        
         if (amenitiesData && amenitiesData.length > 0) {
-          await supabase.from('spa_amenities').insert(
-            amenitiesData.map(a => ({
-              spa_id: id,
-              amenity_id: a.id
-            }))
-          )
+          const insertData = amenitiesData.map(a => ({
+            spa_id: id,
+            amenity_id: a.id
+          }))
+          
+          const { error: insertError } = await supabase.from('spa_amenities').insert(insertData)
+          if (insertError) console.error('Error inserting amenities:', insertError)
+        } else {
+          console.warn('No amenities found in DB matching:', spa.amenities)
         }
       }
     }
@@ -298,6 +318,9 @@ export const spaService = {
     if (filters.location) {
       query = query.ilike('location', `%${filters.location}%`)
     }
+    if (filters.featured !== undefined) {
+      query = query.eq('featured', filters.featured)
+    }
 
     const { data, error } = await query.order('created_at', { ascending: false })
     
@@ -316,6 +339,10 @@ export const spaService = {
       rating: data.rating || 0,
       reviewCount: data.review_count || 0,
       location: data.location || '',
+      address: data.address,
+      addressComment: data.address_comment,
+      latitude: data.latitude,
+      longitude: data.longitude,
       images: data.images || [],
       amenities: data.amenities?.map((a: any) => ({
         name: a.amenity?.name,

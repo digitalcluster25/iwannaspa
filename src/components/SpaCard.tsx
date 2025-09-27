@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { MapPin } from 'lucide-react';
 import { Spa } from '../types/spa';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { useCategories } from '../hooks/useReferences';
+import { useCategories, usePurposes } from '../hooks/useReferences';
 
 interface SpaCardProps {
   spa: Spa;
@@ -13,6 +13,7 @@ interface SpaCardProps {
 
 export function SpaCard({ spa }: SpaCardProps) {
   const { categories } = useCategories();
+  const { purposes } = usePurposes();
 
   // Получаем все категории СПА
   const spaCategories = (spa.categories || (spa.category ? [spa.category] : []))
@@ -35,16 +36,18 @@ export function SpaCard({ spa }: SpaCardProps) {
           alt={spa.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        {spaCategories.map((cat, idx) => (
-          <Badge key={idx} className="absolute top-3 left-3" variant="secondary" style={{ left: `${12 + idx * 95}px` }}>
-            {cat?.name}
-          </Badge>
-        ))}
-        {hasMoreCategories && (
-          <Badge className="absolute top-3 left-3" variant="secondary" style={{ left: `${12 + spaCategories.length * 95}px` }}>
-            +{(spa.categories?.length || 0) - 2}
-          </Badge>
-        )}
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+          {spaCategories.map((cat, idx) => (
+            <Badge key={idx} variant="secondary">
+              {cat?.name}
+            </Badge>
+          ))}
+          {hasMoreCategories && (
+            <Badge variant="secondary">
+              +{(spa.categories?.length || 0) - 2}
+            </Badge>
+          )}
+        </div>
         {spa.featured && (
           <Badge className="absolute bottom-3 left-3 bg-primary">
             Рекомендуем
@@ -65,14 +68,19 @@ export function SpaCard({ spa }: SpaCardProps) {
         </p>
         
         <div className="flex flex-wrap gap-1">
-          {spa.amenities.slice(0, 3).map((amenity, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {typeof amenity === 'string' ? amenity : amenity.name}
-            </Badge>
-          ))}
-          {spa.amenities.length > 3 && (
+          {(spa.purposes || (spa.purpose ? [spa.purpose] : []))
+            .slice(0, 3)
+            .map((purposeValue, index) => {
+              const purpose = purposes.find(p => p.value === purposeValue);
+              return purpose ? (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {purpose.name}
+                </Badge>
+              ) : null;
+            })}
+          {(spa.purposes?.length || 0) > 3 && (
             <Badge variant="outline" className="text-xs">
-              +{spa.amenities.length - 3}
+              +{(spa.purposes?.length || 0) - 3}
             </Badge>
           )}
         </div>

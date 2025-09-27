@@ -22,6 +22,10 @@ export interface Spa {
   rating: number;
   reviewCount: number;
   location: string;
+  address?: string; // Полный адрес
+  addressComment?: string; // Комментарий к адресу
+  latitude?: number; // Координаты для карты
+  longitude?: number; // Координаты для карты
   images: string[];
   amenities: Array<{name: string; description?: string}>; // Изменили на объекты
   services: SpaService[];
@@ -43,6 +47,7 @@ export interface SpaFilters {
   maxPrice?: number;
   minRating?: number;
   location?: string;
+  featured?: boolean;
 }
 
 // Reference data types

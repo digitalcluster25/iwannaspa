@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -21,7 +21,25 @@ import { toast } from 'sonner';
 export function AdminSpaEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isNew = !id;
+  
+  // Получаем активную вкладку из URL или устанавливаем по умолчанию
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'basic');
+
+  // Обновляем вкладку при изменении URL
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  // Обновляем URL при смене вкладки
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  };
 
   // Получаем данные из Supabase
   const { spa, loading: spaLoading } = useSpa(id);
@@ -36,6 +54,10 @@ export function AdminSpaEdit() {
     name: '',
     description: '',
     location: '',
+    address: '',
+    addressComment: '',
+    latitude: undefined,
+    longitude: undefined,
     categories: [], // Массив для мультивыбора
     purposes: [], // Массив для мультивыбора
     category: 'wellness', // Для обратной совместимости
@@ -193,11 +215,18 @@ export function AdminSpaEdit() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Сохраняем текущую вкладку
+    const currentTab = new URLSearchParams(window.location.search).get('tab') || 'basic';
+    
     try {
       const spaData: Partial<Spa> = {
         name: formData.name || '',
         description: formData.description || '',
         location: formData.location || '',
+        address: formData.address,
+        addressComment: formData.addressComment,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         categories: formData.categories || [],
         purposes: formData.purposes || [],
         category: (formData.categories && formData.categories[0]) || formData.category as any,
@@ -214,14 +243,16 @@ export function AdminSpaEdit() {
       };
 
       if (isNew) {
-        await createSpa(spaData);
+        const newSpa = await createSpa(spaData);
         toast.success('СПА успешно создан');
+        // Для нового СПА переходим на страницу редактирования с той же вкладкой
+        navigate(`/admin/spa/${newSpa.id}/edit?tab=${currentTab}`);
       } else {
         await updateSpa(id!, spaData);
         toast.success('СПА успешно обновлен');
+        // Остаемся на той же странице с той же вкладкой
+        navigate(`/admin/spa/${id}/edit?tab=${currentTab}`, { replace: true });
       }
-      
-      navigate('/admin');
     } catch (error) {
       console.error('Error saving SPA:', error);
       toast.error(isNew ? 'Ошибка создания СПА' : 'Ошибка обновления СПА');
@@ -259,6 +290,13 @@ export function AdminSpaEdit() {
           
           {/* Toolbar */}
           <div className="flex items-center gap-4">
+            {!isNew && (
+              <Link to={`/spa/${id}`} target="_blank">
+                <Button type="button" variant="outline">
+                  👁️ Просмотр на сайте
+                </Button>
+              </Link>
+            )}
             <Link to="/admin">
               <Button type="button" variant="outline">
                 Отмена
@@ -272,11 +310,12 @@ export function AdminSpaEdit() {
         </div>
 
         <form id="spa-form" onSubmit={handleSubmit}>
-          <Tabs defaultValue="basic" className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <div className="flex justify-end mb-6">
               <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
                 <TabsTrigger value="basic">Основное</TabsTrigger>
                 <TabsTrigger value="images">Изображения</TabsTrigger>
+                <TabsTrigger value="location">Местоположение</TabsTrigger>
                 <TabsTrigger value="amenities">Удобства</TabsTrigger>
                 <TabsTrigger value="services">Услуги</TabsTrigger>
                 <TabsTrigger value="contacts">Контакты</TabsTrigger>
@@ -399,6 +438,74 @@ export function AdminSpaEdit() {
                         })}
                       </div>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="location" className="mt-6">
+              {/* Location */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Местоположение и карта</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Полный адрес</Label>
+                    <Input
+                      id="address"
+                      value={formData.address || ''}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      placeholder="ул. Примерная, 123, Киев, 01001"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="addressComment">Комментарий к адресу</Label>
+                    <Textarea
+                      id="addressComment"
+                      value={formData.addressComment || ''}
+                      onChange={(e) => handleInputChange('addressComment', e.target.value)}
+                      placeholder="Например: Центральное расположение, 5 минут от метро"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="latitude">Широта (Latitude)</Label>
+                      <Input
+                        id="latitude"
+                        type="number"
+                        step="0.000001"
+                        value={formData.latitude || ''}
+                        onChange={(e) => handleInputChange('latitude', e.target.value ? parseFloat(e.target.value) : undefined)}
+                        placeholder="50.450100"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="longitude">Долгота (Longitude)</Label>
+                      <Input
+                        id="longitude"
+                        type="number"
+                        step="0.000001"
+                        value={formData.longitude || ''}
+                        onChange={(e) => handleInputChange('longitude', e.target.value ? parseFloat(e.target.value) : undefined)}
+                        placeholder="30.523400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      <strong>Совет:</strong> Чтобы получить координаты:
+                    </p>
+                    <ol className="text-sm text-muted-foreground space-y-1 ml-4 list-decimal">
+                      <li>Откройте <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-primary underline">Google Maps</a></li>
+                      <li>Найдите нужное место на карте</li>
+                      <li>Кликните правой кнопкой мыши на метке</li>
+                      <li>Скопируйте координаты (первое число - широта, второе - долгота)</li>
+                    </ol>
                   </div>
                 </CardContent>
               </Card>

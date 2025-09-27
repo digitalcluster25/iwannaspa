@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Droplets, User, Settings } from 'lucide-react';
-import { Button } from './ui/button';
+import { Droplets } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -32,19 +31,6 @@ export function Footer() {
               </Link>
             </div>
             
-            {/* Auth and Admin */}
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm">
-                <User className="h-4 w-4 mr-2" />
-                Авторизация
-              </Button>
-              <Link to="/admin">
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Админ
-                </Button>
-              </Link>
-            </div>
           </nav>
 
           {/* Copyright */}

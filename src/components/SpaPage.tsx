@@ -7,11 +7,13 @@ import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
-import { MapPin, Phone, Mail, ArrowLeft, Plus, Minus, Calendar, X } from 'lucide-react';
+import { MapPin, Phone, Mail, ArrowLeft, Plus, Minus, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
 // import { mockSpas } from '../data/mockData'; // Закомментировано - теперь используем Supabase
 import { useSpa } from '../hooks/useSpas';
 import { useLeadActions } from '../hooks/useLeads';
+import { useCategories, usePurposes } from '../hooks/useReferences';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { CustomMap } from './CustomMap';
 import { SpaService } from '../types/spa';
 import { toast } from 'sonner';
 
@@ -25,8 +27,11 @@ export function SpaPage() {
   // Получаем данные из Supabase
   const { spa, loading, error } = useSpa(id);
   const { createLead, loading: creatingLead } = useLeadActions();
+  const { categories } = useCategories();
+  const { purposes } = usePurposes();
   
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [visitDate, setVisitDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split('T')[0]; // Формат YYYY-MM-DD
@@ -84,6 +89,24 @@ export function SpaPage() {
 
   // Get spa services from data
   const spaServices = spa.services || [];
+  
+  // Функции для слайдера
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % spa.images.length);
+  };
+  
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + spa.images.length) % spa.images.length);
+  };
+  
+  // Получаем категории и цели СПА
+  const spaCategories = (spa.categories || (spa.category ? [spa.category] : []))
+    .map(value => categories.find(c => c.value === value))
+    .filter(Boolean);
+    
+  const spaPurposes = (spa.purposes || (spa.purpose ? [spa.purpose] : []))
+    .map(value => purposes.find(p => p.value === value))
+    .filter(Boolean);
 
   const addService = (service: SpaService) => {
     setSelectedServices(prev => {
@@ -173,21 +196,71 @@ export function SpaPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Images - без миниатюр */}
-          <div className="w-full">
-            <ImageWithFallback
-              src={spa.images[0]}
-              alt={spa.name}
-              className="w-full h-64 md:h-80 object-cover rounded-lg"
-            />
+          {/* Image Slider */}
+          <div className="relative w-full">
+            <div className="relative h-64 md:h-80 overflow-hidden rounded-lg">
+              <ImageWithFallback
+                src={spa.images[currentImageIndex]}
+                alt={spa.name}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Навигация слайдера */}
+              {spa.images.length > 1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
+                    onClick={prevImage}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
+                    onClick={nextImage}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  
+                  {/* Индикаторы */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {spa.images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          index === currentImageIndex 
+                            ? 'bg-white w-6' 
+                            : 'bg-white/50 hover:bg-white/75'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Header */}
           <div className="space-y-4">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary">{categoryLabels[spa.category]}</Badge>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 {spa.featured && <Badge>Рекомендуем</Badge>}
+                
+                {spaCategories.map((cat) => (
+                  <Badge key={cat?.id} variant="secondary">
+                    {cat?.name}
+                  </Badge>
+                ))}
+                
+                {spaPurposes.map((purpose) => (
+                  <Badge key={purpose?.id} variant="outline">
+                    {purpose?.name}
+                  </Badge>
+                ))}
               </div>
               <h1 className="text-3xl mb-2">{spa.name}</h1>
               <div className="flex items-center gap-1 text-muted-foreground">
@@ -198,62 +271,60 @@ export function SpaPage() {
           </div>
 
           {/* Description */}
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl mb-4">Описание</h2>
-              <p className="text-muted-foreground leading-relaxed">{spa.description}</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <h2 className="text-xl">Описание</h2>
+            <p className="text-muted-foreground leading-relaxed">{spa.description}</p>
+          </div>
 
           {/* Spa Services */}
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl mb-6">СПА процедуры</h2>
-              <div className="space-y-4">
-                {spaServices.map((service) => (
-                  <div key={service.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                    <ImageWithFallback
-                      src={service.image}
-                      alt={service.name}
-                      className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium mb-1">{service.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{service.description}</p>
-                      <div className="text-lg font-medium">{service.price.toLocaleString()} ₴</div>
-                    </div>
-                    <Button onClick={() => addService(service)} size="sm">
-                      Приобрести
-                    </Button>
+          <div className="space-y-4">
+            <h2 className="text-xl">СПА процедуры</h2>
+            <div className="space-y-4">
+              {spaServices.map((service) => (
+                <div key={service.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                  <ImageWithFallback
+                    src={service.image}
+                    alt={service.name}
+                    className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-medium mb-1">{service.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">{service.description}</p>
+                    <div className="text-lg font-medium">{service.price.toLocaleString()} ₴</div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <Button onClick={() => addService(service)} size="sm">
+                    Приобрести
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Amenities */}
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl mb-4">Удобства</h2>
-              <Accordion type="multiple" className="w-full">
-                {spa.amenities.map((amenity, index) => (
-                  <AccordionItem key={index} value={`amenity-${index}`}>
-                    <AccordionTrigger className="text-left">
-                      {typeof amenity === 'string' ? amenity : amenity.name}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <p className="text-muted-foreground">
-                        {typeof amenity === 'object' && amenity.description 
-                          ? amenity.description
-                          : `Подробная информация об услуге "${typeof amenity === 'string' ? amenity : amenity.name}" - профессиональное обслуживание с использованием качественного оборудования.`
-                        }
-                      </p>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <h2 className="text-xl">Удобства</h2>
+            <div className="w-full space-y-2">
+              {spa.amenities.map((amenity, index) => (
+                <div key={index} className="border rounded-lg">
+                  <Accordion type="multiple" className="w-full">
+                    <AccordionItem value={`amenity-${index}`} className="border-0 px-4">
+                      <AccordionTrigger className="text-left">
+                        {typeof amenity === 'string' ? amenity : amenity.name}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-muted-foreground">
+                          {typeof amenity === 'object' && amenity.description 
+                            ? amenity.description
+                            : `Подробная информация об услуге "${typeof amenity === 'string' ? amenity : amenity.name}" - профессиональное обслуживание с использованием качественного оборудования.`
+                          }
+                        </p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -405,16 +476,73 @@ export function SpaPage() {
             </CardContent>
           </Card>
 
+          {/* Working Hours Card */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg mb-4">
+                Время работы
+              </h3>
+              {spa.contactInfo?.workingHours ? (
+                <p className="text-sm">{spa.contactInfo.workingHours}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Информация о времени работы уточняйте по телефону</p>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Location Card */}
           <Card>
             <CardContent className="p-6">
               <h3 className="text-lg mb-4">Расположение</h3>
-              <div className="bg-muted h-32 rounded-lg flex items-center justify-center text-muted-foreground mb-4">
-                Карта ({spa.location})
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Центральное расположение в {spa.location} с удобной транспортной доступностью
-              </p>
+              
+              {spa.latitude && spa.longitude ? (
+                <>
+                  <div className="rounded-lg overflow-hidden mb-4" style={{ height: '200px' }}>
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      style={{ border: 0 }}
+                      src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${spa.latitude},${spa.longitude}&zoom=15&maptype=roadmap`}
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                  
+                  {spa.address && (
+                    <p className="text-sm mb-2">
+                      <strong>Адрес:</strong> {spa.address}
+                    </p>
+                  )}
+                  
+                  {spa.addressComment && (
+                    <p className="text-sm text-muted-foreground">
+                      {spa.addressComment}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="bg-muted h-32 rounded-lg flex items-center justify-center text-muted-foreground mb-4">
+                    Карта ({spa.location})
+                  </div>
+                  
+                  {spa.address ? (
+                    <p className="text-sm mb-2">
+                      <strong>Адрес:</strong> {spa.address}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Центральное расположение в {spa.location} с удобной транспортной доступностью
+                    </p>
+                  )}
+                  
+                  {spa.addressComment && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {spa.addressComment}
+                    </p>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
