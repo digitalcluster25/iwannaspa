@@ -66,9 +66,9 @@ export function HomePage() {
           <div 
             className="absolute inset-0" 
             style={{
-              background: 'rgba(238, 230, 230, 0.19)',
-              backdropFilter: 'blur(5.9px)',
-              WebkitBackdropFilter: 'blur(5.9px)',
+              background: 'rgba(238, 230, 230, 0.14)',
+              backdropFilter: 'blur(4.5px)',
+              WebkitBackdropFilter: 'blur(4.5px)',
             }}
           />
         </div>
