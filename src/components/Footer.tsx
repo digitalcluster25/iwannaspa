@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import { Droplets } from 'lucide-react';
+import { Link } from 'react-router-dom'
+import { Droplets } from 'lucide-react'
 
 export function Footer() {
   return (
@@ -17,20 +17,19 @@ export function Footer() {
           {/* Navigation */}
           <nav className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="flex items-center space-x-6">
-              <Link 
-                to="/contacts" 
+              <Link
+                to="/contacts"
                 className="text-muted-foreground hover:text-primary transition-colors"
               >
                 Контакты
               </Link>
-              <Link 
-                to="/offer" 
+              <Link
+                to="/offer"
                 className="text-muted-foreground hover:text-primary transition-colors"
               >
                 Публичная оферта
               </Link>
             </div>
-            
           </nav>
 
           {/* Copyright */}
@@ -40,5 +39,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }

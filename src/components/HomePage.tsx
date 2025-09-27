@@ -11,18 +11,18 @@ export function HomePage() {
   const { categories } = useCategories();
 
   return (
-    <div>
+    <>
       {/* Hero Section */}
       <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: 'url(/Viimsi-SPA.jpg)'
+            backgroundImage: 'url(/Viimsi-SPA.jpg)',
           }}
         >
           <div className="absolute inset-0 bg-black/40" />
         </div>
-        
+
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-5xl mb-6">
             Найдите идеальный СПА для вашего отдыха
@@ -60,7 +60,7 @@ export function HomePage() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredSpas.map((spa) => (
+            {featuredSpas.map(spa => (
               <SpaCard key={spa.id} spa={spa} />
             ))}
           </div>
@@ -78,22 +78,27 @@ export function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.filter(cat => cat.active).map((category) => (
-              <Link key={category.id} to={`/catalog?category=${category.value}`}>
-                <Card className="text-center p-6 hover:shadow-md transition-shadow cursor-pointer h-full">
-                  <CardContent className="space-y-2">
-                    <h3 className="text-lg font-semibold">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Найдите идеальный СПА-комплекс
-                    </p>
-                    <p className="text-primary font-medium">Смотреть →</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            {categories
+              .filter(cat => cat.active)
+              .map(category => (
+                <Link
+                  key={category.id}
+                  to={`/catalog?category=${category.value}`}
+                >
+                  <Card className="text-center p-6 hover:shadow-md transition-shadow cursor-pointer h-full">
+                    <CardContent className="space-y-2">
+                      <h3 className="text-lg font-semibold">{category.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Найдите идеальный СПА-комплекс
+                      </p>
+                      <p className="text-primary font-medium">Смотреть →</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
           </div>
         </div>
       </section>
-    </div>
-  );
+    </>
+  )
 }

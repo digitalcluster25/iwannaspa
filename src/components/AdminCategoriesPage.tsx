@@ -1,46 +1,46 @@
-import { AdminCrudPage } from './AdminCrudPage';
-import { useCategories } from '../hooks/useReferences';
-import { categoryService } from '../services/referenceService';
-import { Category } from '../types/spa';
-import { toast } from 'sonner';
+import { AdminCrudPage } from './AdminCrudPage'
+import { useCategories } from '../hooks/useReferences'
+import { categoryService } from '../services/referenceService'
+import { Category } from '../types/spa'
+import { toast } from 'sonner'
 
 export function AdminCategoriesPage() {
-  const { categories, loading, refetch } = useCategories();
+  const { categories, loading, refetch } = useCategories()
 
   const handleAdd = async (newCategory: Omit<Category, 'id'>) => {
     try {
-      await categoryService.create({ 
-        name: newCategory.name, 
+      await categoryService.create({
+        name: newCategory.name,
         label: newCategory.name,
-        value: newCategory.value, 
-        active: newCategory.active 
-      });
-      await refetch();
-      toast.success('Категория добавлена');
+        value: newCategory.value,
+        active: newCategory.active,
+      })
+      await refetch()
+      toast.success('Категория добавлена')
     } catch (error) {
-      toast.error('Ошибка добавления категории');
+      toast.error('Ошибка добавления категории')
     }
-  };
+  }
 
   const handleEdit = async (id: string, updates: Partial<Category>) => {
     try {
-      await categoryService.update(id, updates);
-      await refetch();
-      toast.success('Категория обновлена');
+      await categoryService.update(id, updates)
+      await refetch()
+      toast.success('Категория обновлена')
     } catch (error) {
-      toast.error('Ошибка обновления категории');
+      toast.error('Ошибка обновления категории')
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
     try {
-      await categoryService.delete(id);
-      await refetch();
-      toast.success('Категория удалена');
+      await categoryService.delete(id)
+      await refetch()
+      toast.success('Категория удалена')
     } catch (error) {
-      toast.error('Ошибка удаления категории');
+      toast.error('Ошибка удаления категории')
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -49,7 +49,7 @@ export function AdminCategoriesPage() {
           <p className="text-muted-foreground text-lg">Загрузка...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -61,5 +61,5 @@ export function AdminCategoriesPage() {
       onDelete={handleDelete}
       hasValue={true}
     />
-  );
+  )
 }

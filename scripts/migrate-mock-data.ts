@@ -1,11 +1,11 @@
 import { supabase } from '../src/lib/supabase.js'
-import { 
-  mockSpas, 
-  mockCities, 
-  mockCategories, 
-  mockPurposes, 
+import {
+  mockSpas,
+  mockCities,
+  mockCategories,
+  mockPurposes,
   mockAmenities,
-  mockServiceTemplates
+  mockServiceTemplates,
 } from '../src/data/mockData.js'
 
 async function migrate() {
@@ -15,15 +15,16 @@ async function migrate() {
     // 1. Мигрируем города
     console.log('📍 Миграция городов...')
     for (const city of mockCities) {
-      const { error } = await supabase
-        .from('cities')
-        .upsert({ 
-          name: city.name, 
-          active: city.active 
-        }, { 
-          onConflict: 'name' 
-        })
-      
+      const { error } = await supabase.from('cities').upsert(
+        {
+          name: city.name,
+          active: city.active,
+        },
+        {
+          onConflict: 'name',
+        }
+      )
+
       if (error) {
         console.error(`  ❌ Ошибка для города ${city.name}:`, error.message)
       } else {
@@ -34,19 +35,23 @@ async function migrate() {
     // 2. Мигрируем категории
     console.log('\n📂 Миграция категорий...')
     for (const category of mockCategories) {
-      const { error } = await supabase
-        .from('categories')
-        .upsert({ 
+      const { error } = await supabase.from('categories').upsert(
+        {
           name: category.name,
           label: category.name,
-          value: category.value, 
-          active: category.active 
-        }, { 
-          onConflict: 'value' 
-        })
-      
+          value: category.value,
+          active: category.active,
+        },
+        {
+          onConflict: 'value',
+        }
+      )
+
       if (error) {
-        console.error(`  ❌ Ошибка для категории ${category.name}:`, error.message)
+        console.error(
+          `  ❌ Ошибка для категории ${category.name}:`,
+          error.message
+        )
       } else {
         console.log(`  ✅ ${category.name}`)
       }
@@ -55,19 +60,23 @@ async function migrate() {
     // 3. Мигрируем назначения
     console.log('\n🎯 Миграция назначений...')
     for (const purpose of mockPurposes) {
-      const { error } = await supabase
-        .from('purposes')
-        .upsert({ 
+      const { error } = await supabase.from('purposes').upsert(
+        {
           name: purpose.name,
           label: purpose.name,
-          value: purpose.value, 
-          active: purpose.active 
-        }, { 
-          onConflict: 'value' 
-        })
-      
+          value: purpose.value,
+          active: purpose.active,
+        },
+        {
+          onConflict: 'value',
+        }
+      )
+
       if (error) {
-        console.error(`  ❌ Ошибка для назначения ${purpose.name}:`, error.message)
+        console.error(
+          `  ❌ Ошибка для назначения ${purpose.name}:`,
+          error.message
+        )
       } else {
         console.log(`  ✅ ${purpose.name}`)
       }
@@ -76,17 +85,21 @@ async function migrate() {
     // 4. Мигрируем удобства
     console.log('\n✨ Миграция удобств...')
     for (const amenity of mockAmenities) {
-      const { error } = await supabase
-        .from('amenities')
-        .upsert({ 
-          name: amenity.name, 
-          active: amenity.active 
-        }, { 
-          onConflict: 'name' 
-        })
-      
+      const { error } = await supabase.from('amenities').upsert(
+        {
+          name: amenity.name,
+          active: amenity.active,
+        },
+        {
+          onConflict: 'name',
+        }
+      )
+
       if (error) {
-        console.error(`  ❌ Ошибка для удобства ${amenity.name}:`, error.message)
+        console.error(
+          `  ❌ Ошибка для удобства ${amenity.name}:`,
+          error.message
+        )
       } else {
         console.log(`  ✅ ${amenity.name}`)
       }
@@ -95,15 +108,16 @@ async function migrate() {
     // 5. Мигрируем шаблоны услуг
     console.log('\n🛠️ Миграция шаблонов услуг...')
     for (const service of mockServiceTemplates) {
-      const { error } = await supabase
-        .from('service_templates')
-        .upsert({ 
-          name: service.name, 
-          active: service.active 
-        }, { 
-          onConflict: 'name' 
-        })
-      
+      const { error } = await supabase.from('service_templates').upsert(
+        {
+          name: service.name,
+          active: service.active,
+        },
+        {
+          onConflict: 'name',
+        }
+      )
+
       if (error) {
         console.error(`  ❌ Ошибка для услуги ${service.name}:`, error.message)
       } else {
@@ -116,7 +130,9 @@ async function migrate() {
     const cityMap = new Map(cities?.map(c => [c.name, c.id]) || [])
 
     // Получаем ID удобств
-    const { data: amenities } = await supabase.from('amenities').select('id, name')
+    const { data: amenities } = await supabase
+      .from('amenities')
+      .select('id, name')
     const amenityMap = new Map(amenities?.map(a => [a.name, a.id]) || [])
 
     // 6. Мигрируем СПА
@@ -139,11 +155,11 @@ async function migrate() {
             purpose: spa.purpose,
             featured: spa.featured,
             active: spa.active,
-            created_at: spa.createdAt
+            created_at: spa.createdAt,
           })
           .select()
           .single()
-        
+
         if (spaError) {
           console.error(`  ❌ Ошибка для СПА ${spa.name}:`, spaError.message)
           continue
@@ -161,12 +177,15 @@ async function migrate() {
                 name: s.name,
                 description: s.description,
                 price: s.price,
-                image: s.image
+                image: s.image,
               }))
             )
-          
+
           if (servicesError) {
-            console.error(`    ❌ Ошибка добавления услуг:`, servicesError.message)
+            console.error(
+              `    ❌ Ошибка добавления услуг:`,
+              servicesError.message
+            )
           } else {
             console.log(`    ✅ Услуги добавлены (${spa.services.length})`)
           }
@@ -184,12 +203,15 @@ async function migrate() {
               .insert(
                 amenityIds.map(amenityId => ({
                   spa_id: spaData.id,
-                  amenity_id: amenityId
+                  amenity_id: amenityId,
                 }))
               )
-            
+
             if (amenitiesError) {
-              console.error(`    ❌ Ошибка добавления удобств:`, amenitiesError.message)
+              console.error(
+                `    ❌ Ошибка добавления удобств:`,
+                amenitiesError.message
+              )
             } else {
               console.log(`    ✅ Удобства добавлены (${amenityIds.length})`)
             }
@@ -206,16 +228,18 @@ async function migrate() {
               email: spa.contactInfo.email,
               working_hours: spa.contactInfo.workingHours,
               whatsapp: spa.contactInfo.whatsapp,
-              telegram: spa.contactInfo.telegram
+              telegram: spa.contactInfo.telegram,
             })
-          
+
           if (contactError) {
-            console.error(`    ❌ Ошибка добавления контактов:`, contactError.message)
+            console.error(
+              `    ❌ Ошибка добавления контактов:`,
+              contactError.message
+            )
           } else {
             console.log(`    ✅ Контакты добавлены`)
           }
         }
-
       } catch (error) {
         console.error(`  ❌ Критическая ошибка для ${spa.name}:`, error)
       }
@@ -229,7 +253,6 @@ async function migrate() {
     console.log(`  • Удобств: ${mockAmenities.length}`)
     console.log(`  • Шаблонов услуг: ${mockServiceTemplates.length}`)
     console.log(`  • СПА комплексов: ${mockSpas.length}`)
-
   } catch (error) {
     console.error('\n❌ Критическая ошибка миграции:', error)
     process.exit(1)

@@ -1,64 +1,80 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Textarea } from './ui/textarea';
-import { Separator } from './ui/separator';
-import { ArrowLeft } from 'lucide-react';
-import { useLead, useLeadActions } from '../hooks/useLeads';
-import { toast } from 'sonner';
-import type { Lead } from '../types/spa';
+import { useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Button } from './ui/button'
+import { Badge } from './ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
+import { Textarea } from './ui/textarea'
+import { Separator } from './ui/separator'
+import { ArrowLeft } from 'lucide-react'
+import { useLead, useLeadActions } from '../hooks/useLeads'
+import { toast } from 'sonner'
+import type { Lead } from '../types/spa'
 
 export function AdminLeadDetails() {
-  const { id } = useParams();
-  const { lead, loading, error, refetch } = useLead(id);
-  const { updateLead, loading: updating } = useLeadActions();
-  const [notes, setNotes] = useState('');
+  const { id } = useParams()
+  const { lead, loading, error, refetch } = useLead(id)
+  const { updateLead, loading: updating } = useLeadActions()
+  const [notes, setNotes] = useState('')
 
   const statusLabels = {
     new: 'Новый',
     contacted: 'В обработке',
     confirmed: 'Подтвержден',
-    cancelled: 'Отменен'
-  };
+    cancelled: 'Отменен',
+  }
 
   const statusColors = {
     new: 'outline',
     contacted: 'default',
     confirmed: 'default',
-    cancelled: 'secondary'
-  } as const;
+    cancelled: 'secondary',
+  } as const
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!lead) return;
-    
+    if (!lead) return
+
     try {
-      await updateLead(lead.id, { 
-        status: newStatus as Lead['status']
-      });
-      toast.success('Статус обновлен');
-      refetch(); // Обновляем данные
+      await updateLead(lead.id, {
+        status: newStatus as Lead['status'],
+      })
+      toast.success('Статус обновлен')
+      refetch() // Обновляем данные
     } catch (error) {
-      console.error('Error updating lead:', error);
-      toast.error('Ошибка обновления статуса');
+      console.error('Error updating lead:', error)
+      toast.error('Ошибка обновления статуса')
     }
-  };
+  }
 
   const formatDateOnly = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const date = new Date(dateStr)
     const months = [
-      'янв.', 'февр.', 'мар.', 'апр.', 'мая', 'июня',
-      'июля', 'авг.', 'сент.', 'окт.', 'нояб.', 'дек.'
-    ];
-    
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear().toString().slice(-2);
-    
-    return `${day} ${month} ${year}`;
-  };
+      'янв.',
+      'февр.',
+      'мар.',
+      'апр.',
+      'мая',
+      'июня',
+      'июля',
+      'авг.',
+      'сент.',
+      'окт.',
+      'нояб.',
+      'дек.',
+    ]
+
+    const day = date.getDate()
+    const month = months[date.getMonth()]
+    const year = date.getFullYear().toString().slice(-2)
+
+    return `${day} ${month} ${year}`
+  }
 
   // Loading состояние
   if (loading) {
@@ -68,7 +84,7 @@ export function AdminLeadDetails() {
           <p className="text-muted-foreground text-lg">Загрузка...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // Error состояние
@@ -83,7 +99,7 @@ export function AdminLeadDetails() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   if (!lead) {
@@ -96,14 +112,17 @@ export function AdminLeadDetails() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Навигация */}
       <div className="mb-6">
-        <Link to="/admin/leads" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary">
+        <Link
+          to="/admin/leads"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
+        >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Назад к списку лидов
         </Link>
@@ -123,7 +142,10 @@ export function AdminLeadDetails() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Телефон:</span>
-                <a href={`tel:${lead.customerPhone}`} className="text-primary hover:underline">
+                <a
+                  href={`tel:${lead.customerPhone}`}
+                  className="text-primary hover:underline"
+                >
                   {lead.customerPhone}
                 </a>
               </div>
@@ -138,20 +160,30 @@ export function AdminLeadDetails() {
                 {statusLabels[lead.status]}
               </Badge>
             </div>
-            
+
             {/* Информация о заявке */}
             <div className="flex flex-wrap items-center gap-6">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">СПА комплекс:</span>
+                <span className="text-sm text-muted-foreground">
+                  СПА комплекс:
+                </span>
                 <span>{lead.spaName}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Дата создания:</span>
+                <span className="text-sm text-muted-foreground">
+                  Дата создания:
+                </span>
                 <span>{formatDateOnly(lead.createdAt)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Дата бронирования:</span>
-                <span>{lead.visitDate ? formatDateOnly(lead.visitDate) : 'Не указана'}</span>
+                <span className="text-sm text-muted-foreground">
+                  Дата бронирования:
+                </span>
+                <span>
+                  {lead.visitDate
+                    ? formatDateOnly(lead.visitDate)
+                    : 'Не указана'}
+                </span>
               </div>
             </div>
 
@@ -168,7 +200,9 @@ export function AdminLeadDetails() {
                     </div>
                     <p>{service.price.toLocaleString()} ₴</p>
                   </div>
-                  {index < lead.selectedServices.length - 1 && <Separator className="mt-3" />}
+                  {index < lead.selectedServices.length - 1 && (
+                    <Separator className="mt-3" />
+                  )}
                 </div>
               ))}
               <Separator />
@@ -199,8 +233,14 @@ export function AdminLeadDetails() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm text-muted-foreground block mb-2">Статус заявки</label>
-                <Select value={lead.status} onValueChange={handleStatusChange} disabled={updating}>
+                <label className="text-sm text-muted-foreground block mb-2">
+                  Статус заявки
+                </label>
+                <Select
+                  value={lead.status}
+                  onValueChange={handleStatusChange}
+                  disabled={updating}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -214,7 +254,9 @@ export function AdminLeadDetails() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-muted-foreground block mb-2">Способ связи <span className="font-bold">перезвонить</span></label>
+                <label className="text-sm text-muted-foreground block mb-2">
+                  Способ связи <span className="font-bold">перезвонить</span>
+                </label>
                 <div className="space-y-2">
                   <Button className="w-full" size="sm">
                     Перезвонить {lead.customerPhone}
@@ -233,7 +275,7 @@ export function AdminLeadDetails() {
               <Textarea
                 placeholder="Добавьте заметки по этому лиду..."
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={e => setNotes(e.target.value)}
                 rows={4}
               />
               <Button size="sm" className="w-full">
@@ -258,5 +300,5 @@ export function AdminLeadDetails() {
         </div>
       </div>
     </div>
-  );
+  )
 }

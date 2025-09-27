@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
-import { 
-  cityService, 
-  categoryService, 
-  purposeService, 
+import {
+  cityService,
+  categoryService,
+  purposeService,
   amenityService,
-  serviceTemplateService
+  serviceTemplateService,
 } from '@/services/referenceService'
-import type { City, Category, Purpose, Amenity, ServiceTemplate } from '@/types/spa'
+import type {
+  City,
+  Category,
+  Purpose,
+  Amenity,
+  ServiceTemplate,
+} from '@/types/spa'
 
 // Хук для работы с городами
 export function useCities() {

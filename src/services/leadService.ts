@@ -6,14 +6,16 @@ export const leadService = {
   async getAll() {
     const { data, error } = await supabase
       .from('leads')
-      .select(`
+      .select(
+        `
         *,
         spa:spas(id, name)
-      `)
+      `
+      )
       .order('created_at', { ascending: false })
-    
+
     if (error) throw error
-    
+
     return data.map(this.transformLead)
   },
 
@@ -21,15 +23,17 @@ export const leadService = {
   async getById(id: string) {
     const { data, error } = await supabase
       .from('leads')
-      .select(`
+      .select(
+        `
         *,
         spa:spas(id, name)
-      `)
+      `
+      )
       .eq('id', id)
       .single()
-    
+
     if (error) throw error
-    
+
     return this.transformLead(data)
   },
 
@@ -46,13 +50,13 @@ export const leadService = {
         total_amount: lead.totalAmount || 0,
         message: lead.message,
         status: lead.status || 'new',
-        visit_date: lead.visitDate
+        visit_date: lead.visitDate,
       })
       .select()
       .single()
-    
+
     if (error) throw error
-    
+
     return this.getById(data.id)
   },
 
@@ -69,22 +73,19 @@ export const leadService = {
         message: lead.message,
         status: lead.status,
         visit_date: lead.visitDate,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-    
+
     if (error) throw error
-    
+
     return this.getById(id)
   },
 
   // Удалить лид
   async delete(id: string) {
-    const { error } = await supabase
-      .from('leads')
-      .delete()
-      .eq('id', id)
-    
+    const { error } = await supabase.from('leads').delete().eq('id', id)
+
     if (error) throw error
   },
 
@@ -92,15 +93,17 @@ export const leadService = {
   async getBySpaId(spaId: string) {
     const { data, error } = await supabase
       .from('leads')
-      .select(`
+      .select(
+        `
         *,
         spa:spas(id, name)
-      `)
+      `
+      )
       .eq('spa_id', spaId)
       .order('created_at', { ascending: false })
-    
+
     if (error) throw error
-    
+
     return data.map(this.transformLead)
   },
 
@@ -119,7 +122,7 @@ export const leadService = {
       status: data.status,
       visitDate: data.visit_date,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
     }
-  }
+  },
 }

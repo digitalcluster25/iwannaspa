@@ -1,43 +1,43 @@
-import { useState, useEffect } from 'react';
-import { AdminCrudPage } from './AdminCrudPage';
+import { useState, useEffect } from 'react'
+import { AdminCrudPage } from './AdminCrudPage'
 // import { mockCities } from '../data/mockData'; // Закомментировано
-import { useCities } from '../hooks/useReferences';
-import { cityService } from '../services/referenceService';
-import { City } from '../types/spa';
-import { toast } from 'sonner';
+import { useCities } from '../hooks/useReferences'
+import { cityService } from '../services/referenceService'
+import { City } from '../types/spa'
+import { toast } from 'sonner'
 
 export function AdminCitiesPage() {
-  const { cities, loading, refetch } = useCities();
+  const { cities, loading, refetch } = useCities()
 
   const handleAdd = async (newCity: Omit<City, 'id'>) => {
     try {
-      await cityService.create({ name: newCity.name, active: newCity.active });
-      await refetch();
-      toast.success('Город добавлен');
+      await cityService.create({ name: newCity.name, active: newCity.active })
+      await refetch()
+      toast.success('Город добавлен')
     } catch (error) {
-      toast.error('Ошибка добавления города');
+      toast.error('Ошибка добавления города')
     }
-  };
+  }
 
   const handleEdit = async (id: string, updates: Partial<City>) => {
     try {
-      await cityService.update(id, updates);
-      await refetch();
-      toast.success('Город обновлен');
+      await cityService.update(id, updates)
+      await refetch()
+      toast.success('Город обновлен')
     } catch (error) {
-      toast.error('Ошибка обновления города');
+      toast.error('Ошибка обновления города')
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
     try {
-      await cityService.delete(id);
-      await refetch();
-      toast.success('Город удален');
+      await cityService.delete(id)
+      await refetch()
+      toast.success('Город удален')
     } catch (error) {
-      toast.error('Ошибка удаления города');
+      toast.error('Ошибка удаления города')
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -46,7 +46,7 @@ export function AdminCitiesPage() {
           <p className="text-muted-foreground text-lg">Загрузка...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -58,5 +58,5 @@ export function AdminCitiesPage() {
       onDelete={handleDelete}
       hasValue={false}
     />
-  );
+  )
 }

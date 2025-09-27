@@ -6,21 +6,23 @@ export const spaService = {
   async getAll() {
     const { data, error } = await supabase
       .from('spas')
-      .select(`
+      .select(
+        `
         *,
         city:cities(id, name),
         services:spa_services(*),
         amenities:spa_amenities(amenity:amenities(*)),
         contact:spa_contacts(*)
-      `)
+      `
+      )
       .eq('active', true)
       .order('created_at', { ascending: false })
-    
+
     if (error) {
       console.error('Error fetching spas:', error)
       throw error
     }
-    
+
     // Трансформируем данные в нужный формат
     return this.transformSpas(data)
   },
@@ -29,28 +31,30 @@ export const spaService = {
   async getById(id: string) {
     const { data, error } = await supabase
       .from('spas')
-      .select(`
+      .select(
+        `
         *,
         city:cities(id, name),
         services:spa_services(*),
         amenities:spa_amenities(amenity:amenities(*)),
         contact:spa_contacts(*)
-      `)
+      `
+      )
       .eq('id', id)
       .single()
-    
+
     if (error) {
       console.error('Error fetching spa:', error)
       throw error
     }
-    
+
     return this.transformSpa(data)
   },
 
   // Создать СПА
   async create(spa: Partial<Spa>) {
     console.log('Creating SPA with data:', spa)
-    
+
     const { data: spaData, error: spaError } = await supabase
       .from('spas')
       .insert({
@@ -70,11 +74,11 @@ export const spaService = {
         category: spa.category,
         purpose: spa.purpose,
         featured: spa.featured || false,
-        active: spa.active !== false
+        active: spa.active !== false,
       })
       .select()
       .single()
-    
+
     if (spaError) throw spaError
 
     // Добавляем услуги
@@ -89,33 +93,35 @@ export const spaService = {
             description: s.description,
             duration: 0,
             price: s.price,
-            image: s.image
+            image: s.image,
           }))
         )
-      
+
       if (servicesError) throw servicesError
     }
 
     // Добавляем удобства
     if (spa.amenities && spa.amenities.length > 0) {
       // Получаем ID удобств по названиям
-      const { data: amenitiesData, error: amenitiesSearchError } = await supabase
-        .from('amenities')
-        .select('id, name')
-        .in('name', spa.amenities)
-      
-      if (amenitiesSearchError) console.error('Error searching amenities:', amenitiesSearchError)
-      
+      const { data: amenitiesData, error: amenitiesSearchError } =
+        await supabase
+          .from('amenities')
+          .select('id, name')
+          .in('name', spa.amenities)
+
+      if (amenitiesSearchError)
+        console.error('Error searching amenities:', amenitiesSearchError)
+
       if (amenitiesData && amenitiesData.length > 0) {
         const insertData = amenitiesData.map(a => ({
           spa_id: spaData.id,
-          amenity_id: a.id
+          amenity_id: a.id,
         }))
-        
+
         const { error: amenitiesError } = await supabase
           .from('spa_amenities')
           .insert(insertData)
-        
+
         if (amenitiesError) {
           console.error('Error inserting spa_amenities:', amenitiesError)
           throw amenitiesError
@@ -128,16 +134,19 @@ export const spaService = {
     // Добавляем контакты
     if (spa.contactInfo) {
       console.log('Saving contacts:', spa.contactInfo)
-      
+
       // Сначала проверяем, существуют ли контакты (игнорируем ошибку если нет)
       const { data: existingContact, error: checkError } = await supabase
         .from('spa_contacts')
         .select('id')
         .eq('spa_id', spaData.id)
         .maybeSingle() // maybeSingle() вместо single() - не выдает ошибку если нет записи
-      
-      console.log('Existing contact check:', { exists: !!existingContact, checkError })
-      
+
+      console.log('Existing contact check:', {
+        exists: !!existingContact,
+        checkError,
+      })
+
       if (existingContact) {
         console.log('Updating existing contact')
         // Обновляем существующие
@@ -148,10 +157,10 @@ export const spaService = {
             email: spa.contactInfo.email,
             working_hours: spa.contactInfo.workingHours,
             whatsapp: spa.contactInfo.whatsapp,
-            telegram: spa.contactInfo.telegram
+            telegram: spa.contactInfo.telegram,
           })
           .eq('spa_id', spaData.id)
-        
+
         if (contactError) {
           console.error('Error updating contact:', contactError)
           throw contactError
@@ -167,9 +176,9 @@ export const spaService = {
             email: spa.contactInfo.email,
             working_hours: spa.contactInfo.workingHours,
             whatsapp: spa.contactInfo.whatsapp,
-            telegram: spa.contactInfo.telegram
+            telegram: spa.contactInfo.telegram,
           })
-        
+
         if (contactError) {
           console.error('Error creating contact:', contactError)
           throw contactError
@@ -202,17 +211,17 @@ export const spaService = {
         purpose: spa.purpose,
         featured: spa.featured,
         active: spa.active,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-    
+
     if (error) throw error
 
     // Обновляем услуги
     if (spa.services) {
       // Удаляем старые услуги
       await supabase.from('spa_services').delete().eq('spa_id', id)
-      
+
       // Добавляем новые
       if (spa.services.length > 0) {
         await supabase.from('spa_services').insert(
@@ -222,7 +231,7 @@ export const spaService = {
             description: s.description,
             duration: 0,
             price: s.price,
-            image: s.image
+            image: s.image,
           }))
         )
       }
@@ -231,26 +240,34 @@ export const spaService = {
     // Обновляем удобства
     if (spa.amenities) {
       // Удаляем старые удобства
-      const { error: deleteError } = await supabase.from('spa_amenities').delete().eq('spa_id', id)
-      if (deleteError) console.error('Error deleting old amenities:', deleteError)
-      
+      const { error: deleteError } = await supabase
+        .from('spa_amenities')
+        .delete()
+        .eq('spa_id', id)
+      if (deleteError)
+        console.error('Error deleting old amenities:', deleteError)
+
       // Добавляем новые
       if (spa.amenities.length > 0) {
         const { data: amenitiesData, error: searchError } = await supabase
           .from('amenities')
           .select('id, name')
           .in('name', spa.amenities)
-        
-        if (searchError) console.error('Error searching amenities:', searchError)
-        
+
+        if (searchError)
+          console.error('Error searching amenities:', searchError)
+
         if (amenitiesData && amenitiesData.length > 0) {
           const insertData = amenitiesData.map(a => ({
             spa_id: id,
-            amenity_id: a.id
+            amenity_id: a.id,
           }))
-          
-          const { error: insertError } = await supabase.from('spa_amenities').insert(insertData)
-          if (insertError) console.error('Error inserting amenities:', insertError)
+
+          const { error: insertError } = await supabase
+            .from('spa_amenities')
+            .insert(insertData)
+          if (insertError)
+            console.error('Error inserting amenities:', insertError)
         } else {
           console.warn('No amenities found in DB matching:', spa.amenities)
         }
@@ -259,16 +276,14 @@ export const spaService = {
 
     // Обновляем контакты
     if (spa.contactInfo) {
-      await supabase
-        .from('spa_contacts')
-        .upsert({
-          spa_id: id,
-          phone: spa.contactInfo.phone,
-          email: spa.contactInfo.email,
-          working_hours: spa.contactInfo.workingHours,
-          whatsapp: spa.contactInfo.whatsapp,
-          telegram: spa.contactInfo.telegram
-        })
+      await supabase.from('spa_contacts').upsert({
+        spa_id: id,
+        phone: spa.contactInfo.phone,
+        email: spa.contactInfo.email,
+        working_hours: spa.contactInfo.workingHours,
+        whatsapp: spa.contactInfo.whatsapp,
+        telegram: spa.contactInfo.telegram,
+      })
     }
 
     return this.getById(id)
@@ -276,29 +291,32 @@ export const spaService = {
 
   // Удалить
   async delete(id: string) {
-    const { error } = await supabase
-      .from('spas')
-      .delete()
-      .eq('id', id)
-    
+    const { error } = await supabase.from('spas').delete().eq('id', id)
+
     if (error) throw error
   },
 
   // Поиск с фильтрами
-  async search(filters: SpaFilters & { searchTerm?: string; amenities?: string[] }) {
+  async search(
+    filters: SpaFilters & { searchTerm?: string; amenities?: string[] }
+  ) {
     let query = supabase
       .from('spas')
-      .select(`
+      .select(
+        `
         *,
         city:cities(id, name),
         services:spa_services(*),
         amenities:spa_amenities(amenity:amenities(*)),
         contact:spa_contacts(*)
-      `)
+      `
+      )
       .eq('active', true)
 
     if (filters.searchTerm) {
-      query = query.or(`name.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%`)
+      query = query.or(
+        `name.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%`
+      )
     }
     if (filters.category) {
       query = query.eq('category', filters.category)
@@ -322,10 +340,12 @@ export const spaService = {
       query = query.eq('featured', filters.featured)
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false })
-    
+    const { data, error } = await query.order('created_at', {
+      ascending: false,
+    })
+
     if (error) throw error
-    
+
     return this.transformSpas(data)
   },
 
@@ -344,40 +364,46 @@ export const spaService = {
       latitude: data.latitude,
       longitude: data.longitude,
       images: data.images || [],
-      amenities: data.amenities?.map((a: any) => ({
-        name: a.amenity?.name,
-        description: a.amenity?.description
-      })).filter((a: any) => a.name) || [],
-      services: data.services?.map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        description: s.description || '',
-        price: s.price,
-        image: s.image || ''
-      })) || [],
-      contactInfo: data.contact ? {
-        phone: data.contact.phone || '',
-        email: data.contact.email || '',
-        workingHours: data.contact.working_hours || '',
-        whatsapp: data.contact.whatsapp,
-        telegram: data.contact.telegram
-      } : {
-        phone: '',
-        email: '',
-        workingHours: ''
-      },
+      amenities:
+        data.amenities
+          ?.map((a: any) => ({
+            name: a.amenity?.name,
+            description: a.amenity?.description,
+          }))
+          .filter((a: any) => a.name) || [],
+      services:
+        data.services?.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description || '',
+          price: s.price,
+          image: s.image || '',
+        })) || [],
+      contactInfo: data.contact
+        ? {
+            phone: data.contact.phone || '',
+            email: data.contact.email || '',
+            workingHours: data.contact.working_hours || '',
+            whatsapp: data.contact.whatsapp,
+            telegram: data.contact.telegram,
+          }
+        : {
+            phone: '',
+            email: '',
+            workingHours: '',
+          },
       categories: data.categories || (data.category ? [data.category] : []),
       purposes: data.purposes || (data.purpose ? [data.purpose] : []),
       category: data.category as any,
       purpose: data.purpose as any,
       featured: data.featured,
       active: data.active,
-      createdAt: data.created_at
+      createdAt: data.created_at,
     }
   },
 
   // Трансформация массива СПА
   transformSpas(data: any[]): Spa[] {
     return data.map(item => this.transformSpa(item))
-  }
+  },
 }

@@ -1,5 +1,11 @@
 import { supabase } from '@/lib/supabase'
-import type { City, Category, Purpose, Amenity, ServiceTemplate } from '@/types/spa'
+import type {
+  City,
+  Category,
+  Purpose,
+  Amenity,
+  ServiceTemplate,
+} from '@/types/spa'
 
 // Сервис для работы с городами
 export const cityService = {
@@ -8,7 +14,7 @@ export const cityService = {
       .from('cities')
       .select('*')
       .order('name')
-    
+
     if (error) throw error
     return data as City[]
   },
@@ -19,7 +25,7 @@ export const cityService = {
       .select('*')
       .eq('id', id)
       .single()
-    
+
     if (error) throw error
     return data as City
   },
@@ -30,7 +36,7 @@ export const cityService = {
       .insert(city)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as City
   },
@@ -42,19 +48,16 @@ export const cityService = {
       .eq('id', id)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as City
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from('cities')
-      .delete()
-      .eq('id', id)
-    
+    const { error } = await supabase.from('cities').delete().eq('id', id)
+
     if (error) throw error
-  }
+  },
 }
 
 // Сервис для работы с категориями
@@ -64,7 +67,7 @@ export const categoryService = {
       .from('categories')
       .select('*')
       .order('name')
-    
+
     if (error) throw error
     return data as Category[]
   },
@@ -75,18 +78,23 @@ export const categoryService = {
       .select('*')
       .eq('id', id)
       .single()
-    
+
     if (error) throw error
     return data as Category
   },
 
-  async create(category: { name: string; label: string; value: string; active?: boolean }) {
+  async create(category: {
+    name: string
+    label: string
+    value: string
+    active?: boolean
+  }) {
     const { data, error } = await supabase
       .from('categories')
       .insert(category)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as Category
   },
@@ -98,19 +106,16 @@ export const categoryService = {
       .eq('id', id)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as Category
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id)
-    
+    const { error } = await supabase.from('categories').delete().eq('id', id)
+
     if (error) throw error
-  }
+  },
 }
 
 // Сервис для работы с назначениями (purposes)
@@ -120,7 +125,7 @@ export const purposeService = {
       .from('purposes')
       .select('*')
       .order('name')
-    
+
     if (error) throw error
     return data as Purpose[]
   },
@@ -131,18 +136,23 @@ export const purposeService = {
       .select('*')
       .eq('id', id)
       .single()
-    
+
     if (error) throw error
     return data as Purpose
   },
 
-  async create(purpose: { name: string; label: string; value: string; active?: boolean }) {
+  async create(purpose: {
+    name: string
+    label: string
+    value: string
+    active?: boolean
+  }) {
     const { data, error } = await supabase
       .from('purposes')
       .insert(purpose)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as Purpose
   },
@@ -154,19 +164,16 @@ export const purposeService = {
       .eq('id', id)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as Purpose
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from('purposes')
-      .delete()
-      .eq('id', id)
-    
+    const { error } = await supabase.from('purposes').delete().eq('id', id)
+
     if (error) throw error
-  }
+  },
 }
 
 // Сервис для работы с удобствами (amenities)
@@ -176,7 +183,7 @@ export const amenityService = {
       .from('amenities')
       .select('*')
       .order('name')
-    
+
     if (error) throw error
     return data as Amenity[]
   },
@@ -187,7 +194,7 @@ export const amenityService = {
       .select('*')
       .eq('id', id)
       .single()
-    
+
     if (error) throw error
     return data as Amenity
   },
@@ -198,7 +205,7 @@ export const amenityService = {
       .insert(amenity)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as Amenity
   },
@@ -210,19 +217,16 @@ export const amenityService = {
       .eq('id', id)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as Amenity
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from('amenities')
-      .delete()
-      .eq('id', id)
-    
+    const { error } = await supabase.from('amenities').delete().eq('id', id)
+
     if (error) throw error
-  }
+  },
 }
 
 // Сервис для работы с шаблонами услуг
@@ -232,7 +236,7 @@ export const serviceTemplateService = {
       .from('service_templates')
       .select('*')
       .order('name')
-    
+
     if (error) throw error
     return data as ServiceTemplate[]
   },
@@ -243,7 +247,7 @@ export const serviceTemplateService = {
       .select('*')
       .eq('id', id)
       .single()
-    
+
     if (error) throw error
     return data as ServiceTemplate
   },
@@ -254,7 +258,7 @@ export const serviceTemplateService = {
       .insert(service)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as ServiceTemplate
   },
@@ -266,7 +270,7 @@ export const serviceTemplateService = {
       .eq('id', id)
       .select()
       .single()
-    
+
     if (error) throw error
     return data as ServiceTemplate
   },
@@ -276,7 +280,7 @@ export const serviceTemplateService = {
       .from('service_templates')
       .delete()
       .eq('id', id)
-    
+
     if (error) throw error
-  }
+  },
 }

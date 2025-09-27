@@ -1,30 +1,54 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Label } from './ui/label';
-import { Switch } from './ui/switch';
-import { Textarea } from './ui/textarea';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { useAmenities } from '../hooks/useReferences';
-import { amenityService } from '../services/referenceService';
-import { Amenity } from '../types/spa';
-import { toast } from 'sonner';
+import { useState } from 'react'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Badge } from './ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './ui/table'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog'
+import { Label } from './ui/label'
+import { Switch } from './ui/switch'
+import { Textarea } from './ui/textarea'
+import { Plus, Edit, Trash2 } from 'lucide-react'
+import { useAmenities } from '../hooks/useReferences'
+import { amenityService } from '../services/referenceService'
+import { Amenity } from '../types/spa'
+import { toast } from 'sonner'
 
 export function AdminAmenitiesPage() {
-  const { amenities, loading, refetch } = useAmenities();
-  const [editingItem, setEditingItem] = useState<Amenity | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { amenities, loading, refetch } = useAmenities()
+  const [editingItem, setEditingItem] = useState<Amenity | null>(null)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    active: true
-  });
+    active: true,
+  })
 
   const handleAdd = async () => {
     if (formData.name.trim()) {
@@ -32,17 +56,17 @@ export function AdminAmenitiesPage() {
         await amenityService.create({
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
-          active: formData.active
-        });
-        await refetch();
-        toast.success('Удобство добавлено');
-        setFormData({ name: '', description: '', active: true });
-        setIsAddDialogOpen(false);
+          active: formData.active,
+        })
+        await refetch()
+        toast.success('Удобство добавлено')
+        setFormData({ name: '', description: '', active: true })
+        setIsAddDialogOpen(false)
       } catch (error) {
-        toast.error('Ошибка добавления удобства');
+        toast.error('Ошибка добавления удобства')
       }
     }
-  };
+  }
 
   const handleEdit = async () => {
     if (editingItem && formData.name.trim()) {
@@ -50,43 +74,43 @@ export function AdminAmenitiesPage() {
         await amenityService.update(editingItem.id, {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
-          active: formData.active
-        });
-        await refetch();
-        toast.success('Удобство обновлено');
-        setFormData({ name: '', description: '', active: true });
-        setEditingItem(null);
-        setIsEditDialogOpen(false);
+          active: formData.active,
+        })
+        await refetch()
+        toast.success('Удобство обновлено')
+        setFormData({ name: '', description: '', active: true })
+        setEditingItem(null)
+        setIsEditDialogOpen(false)
       } catch (error) {
-        toast.error('Ошибка обновления удобства');
+        toast.error('Ошибка обновления удобства')
       }
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
     try {
-      await amenityService.delete(id);
-      await refetch();
-      toast.success('Удобство удалено');
+      await amenityService.delete(id)
+      await refetch()
+      toast.success('Удобство удалено')
     } catch (error) {
-      toast.error('Ошибка удаления удобства');
+      toast.error('Ошибка удаления удобства')
     }
-  };
+  }
 
   const openEditDialog = (item: Amenity) => {
-    setEditingItem(item);
+    setEditingItem(item)
     setFormData({
       name: item.name,
       description: item.description || '',
-      active: item.active
-    });
-    setIsEditDialogOpen(true);
-  };
+      active: item.active,
+    })
+    setIsEditDialogOpen(true)
+  }
 
   const openAddDialog = () => {
-    setFormData({ name: '', description: '', active: true });
-    setIsAddDialogOpen(true);
-  };
+    setFormData({ name: '', description: '', active: true })
+    setIsAddDialogOpen(true)
+  }
 
   if (loading) {
     return (
@@ -95,7 +119,7 @@ export function AdminAmenitiesPage() {
           <p className="text-muted-foreground text-lg">Загрузка...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -128,7 +152,9 @@ export function AdminAmenitiesPage() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, name: e.target.value }))
+                  }
                   placeholder="Введите название удобства"
                 />
               </div>
@@ -137,7 +163,12 @@ export function AdminAmenitiesPage() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Введите описание удобства (опционально)"
                   rows={3}
                 />
@@ -146,11 +177,16 @@ export function AdminAmenitiesPage() {
                 <Label>Активен</Label>
                 <Switch
                   checked={formData.active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
+                  onCheckedChange={checked =>
+                    setFormData(prev => ({ ...prev, active: checked }))
+                  }
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
                   Отмена
                 </Button>
                 <Button onClick={handleAdd} disabled={!formData.name.trim()}>
@@ -178,7 +214,7 @@ export function AdminAmenitiesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {amenities.map((item) => (
+                {amenities.map(item => (
                   <TableRow key={item.id}>
                     <TableCell>
                       <div className="font-medium">{item.name}</div>
@@ -189,13 +225,17 @@ export function AdminAmenitiesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={item.active ? "default" : "secondary"}>
-                        {item.active ? "Активен" : "Неактивен"}
+                      <Badge variant={item.active ? 'default' : 'secondary'}>
+                        {item.active ? 'Активен' : 'Неактивен'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={() => openEditDialog(item)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditDialog(item)}
+                        >
                           <Edit className="h-3 w-3" />
                         </Button>
                         <AlertDialog>
@@ -206,15 +246,17 @@ export function AdminAmenitiesPage() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Удалить удобство?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Удалить удобство?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Вы уверены, что хотите удалить "{item.name}"? 
+                                Вы уверены, что хотите удалить "{item.name}"?
                                 Это действие нельзя будет отменить.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Отмена</AlertDialogCancel>
-                              <AlertDialogAction 
+                              <AlertDialogAction
                                 onClick={() => handleDelete(item.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
@@ -259,7 +301,9 @@ export function AdminAmenitiesPage() {
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={e =>
+                  setFormData(prev => ({ ...prev, name: e.target.value }))
+                }
                 placeholder="Введите название удобства"
               />
             </div>
@@ -268,7 +312,12 @@ export function AdminAmenitiesPage() {
               <Textarea
                 id="edit-description"
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
                 placeholder="Введите описание удобства (опционально)"
                 rows={3}
               />
@@ -277,11 +326,16 @@ export function AdminAmenitiesPage() {
               <Label>Активен</Label>
               <Switch
                 checked={formData.active}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
+                onCheckedChange={checked =>
+                  setFormData(prev => ({ ...prev, active: checked }))
+                }
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
                 Отмена
               </Button>
               <Button onClick={handleEdit} disabled={!formData.name.trim()}>
@@ -292,5 +346,5 @@ export function AdminAmenitiesPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

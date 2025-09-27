@@ -1,46 +1,46 @@
-import { AdminCrudPage } from './AdminCrudPage';
-import { usePurposes } from '../hooks/useReferences';
-import { purposeService } from '../services/referenceService';
-import { Purpose } from '../types/spa';
-import { toast } from 'sonner';
+import { AdminCrudPage } from './AdminCrudPage'
+import { usePurposes } from '../hooks/useReferences'
+import { purposeService } from '../services/referenceService'
+import { Purpose } from '../types/spa'
+import { toast } from 'sonner'
 
 export function AdminPurposesPage() {
-  const { purposes, loading, refetch } = usePurposes();
+  const { purposes, loading, refetch } = usePurposes()
 
   const handleAdd = async (newPurpose: Omit<Purpose, 'id'>) => {
     try {
-      await purposeService.create({ 
+      await purposeService.create({
         name: newPurpose.name,
-        label: newPurpose.name, 
-        value: newPurpose.value, 
-        active: newPurpose.active 
-      });
-      await refetch();
-      toast.success('Назначение добавлено');
+        label: newPurpose.name,
+        value: newPurpose.value,
+        active: newPurpose.active,
+      })
+      await refetch()
+      toast.success('Назначение добавлено')
     } catch (error) {
-      toast.error('Ошибка добавления назначения');
+      toast.error('Ошибка добавления назначения')
     }
-  };
+  }
 
   const handleEdit = async (id: string, updates: Partial<Purpose>) => {
     try {
-      await purposeService.update(id, updates);
-      await refetch();
-      toast.success('Назначение обновлено');
+      await purposeService.update(id, updates)
+      await refetch()
+      toast.success('Назначение обновлено')
     } catch (error) {
-      toast.error('Ошибка обновления назначения');
+      toast.error('Ошибка обновления назначения')
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
     try {
-      await purposeService.delete(id);
-      await refetch();
-      toast.success('Назначение удалено');
+      await purposeService.delete(id)
+      await refetch()
+      toast.success('Назначение удалено')
     } catch (error) {
-      toast.error('Ошибка удаления назначения');
+      toast.error('Ошибка удаления назначения')
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -49,7 +49,7 @@ export function AdminPurposesPage() {
           <p className="text-muted-foreground text-lg">Загрузка...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -61,5 +61,5 @@ export function AdminPurposesPage() {
       onDelete={handleDelete}
       hasValue={true}
     />
-  );
+  )
 }

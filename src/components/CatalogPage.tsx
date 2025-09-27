@@ -1,105 +1,118 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Search, SlidersHorizontal } from 'lucide-react';
-import { SpaCard } from './SpaCard';
-import { SpaFiltersComponent } from './SpaFilters';
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Search, SlidersHorizontal } from 'lucide-react'
+import { SpaCard } from './SpaCard'
+import { SpaFiltersComponent } from './SpaFilters'
 // import { mockSpas } from '../data/mockData'; // Закомментировано - теперь используем Supabase
-import { useSpas } from '../hooks/useSpas';
-import { SpaFilters } from '../types/spa';
+import { useSpas } from '../hooks/useSpas'
+import { SpaFilters } from '../types/spa'
 
 export function CatalogPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('rating');
-  const [filters, setFilters] = useState<SpaFilters>({});
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState('rating')
+  const [filters, setFilters] = useState<SpaFilters>({})
+  const [showFilters, setShowFilters] = useState(false)
 
   // Получаем данные из Supabase
-  const { spas, loading, error } = useSpas();
+  const { spas, loading, error } = useSpas()
 
   // Применяем фильтры из URL при загрузке
   useEffect(() => {
-    const categoryFromUrl = searchParams.get('category');
-    const purposeFromUrl = searchParams.get('purpose');
-    const locationFromUrl = searchParams.get('location');
-    
+    const categoryFromUrl = searchParams.get('category')
+    const purposeFromUrl = searchParams.get('purpose')
+    const locationFromUrl = searchParams.get('location')
+
     if (categoryFromUrl || purposeFromUrl || locationFromUrl) {
       setFilters(prev => ({
         ...prev,
         ...(categoryFromUrl && { category: categoryFromUrl }),
         ...(purposeFromUrl && { purpose: purposeFromUrl }),
-        ...(locationFromUrl && { location: locationFromUrl })
-      }));
+        ...(locationFromUrl && { location: locationFromUrl }),
+      }))
     }
-  }, [searchParams]);
+  }, [searchParams])
 
   const filteredAndSortedSpas = useMemo(() => {
-    let result = [...spas];
+    let result = [...spas]
 
     // Apply search
     if (searchTerm) {
-      result = result.filter(spa =>
-        spa.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        spa.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        spa.location.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      result = result.filter(
+        spa =>
+          spa.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          spa.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          spa.location.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     }
 
     // Apply filters
     if (filters.category) {
-      result = result.filter(spa => 
-        spa.categories?.includes(filters.category as any) || spa.category === filters.category
-      );
+      result = result.filter(
+        spa =>
+          spa.categories?.includes(filters.category as any) ||
+          spa.category === filters.category
+      )
     }
     if (filters.purpose) {
-      result = result.filter(spa => 
-        spa.purposes?.includes(filters.purpose as any) || spa.purpose === filters.purpose
-      );
+      result = result.filter(
+        spa =>
+          spa.purposes?.includes(filters.purpose as any) ||
+          spa.purpose === filters.purpose
+      )
     }
     if (filters.location) {
-      result = result.filter(spa => spa.location === filters.location);
+      result = result.filter(spa => spa.location === filters.location)
     }
     if (filters.minPrice) {
-      result = result.filter(spa => spa.price >= filters.minPrice!);
+      result = result.filter(spa => spa.price >= filters.minPrice!)
     }
     if (filters.maxPrice) {
-      result = result.filter(spa => spa.price <= filters.maxPrice!);
+      result = result.filter(spa => spa.price <= filters.maxPrice!)
     }
     if (filters.minRating) {
-      result = result.filter(spa => spa.rating >= filters.minRating!);
+      result = result.filter(spa => spa.rating >= filters.minRating!)
     }
 
     // Sort
     result.sort((a, b) => {
       switch (sortBy) {
         case 'price-low':
-          return a.price - b.price;
+          return a.price - b.price
         case 'price-high':
-          return b.price - a.price;
+          return b.price - a.price
         case 'rating':
-          return b.rating - a.rating;
+          return b.rating - a.rating
         case 'name':
-          return a.name.localeCompare(b.name);
+          return a.name.localeCompare(b.name)
         default:
-          return 0;
+          return 0
       }
-    });
+    })
 
-    return result;
-  }, [spas, searchTerm, sortBy, filters]);
+    return result
+  }, [spas, searchTerm, sortBy, filters])
 
   // Loading состояние
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
-          <p className="text-muted-foreground text-lg">Загрузка СПА комплексов...</p>
+          <p className="text-muted-foreground text-lg">
+            Загрузка СПА комплексов...
+          </p>
         </div>
       </div>
-    );
+    )
   }
 
   // Error состояние
@@ -107,19 +120,23 @@ export function CatalogPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
-          <p className="text-destructive text-lg mb-4">Ошибка загрузки данных</p>
+          <p className="text-destructive text-lg mb-4">
+            Ошибка загрузки данных
+          </p>
           <p className="text-muted-foreground mb-6">{error.message}</p>
-          <Button onClick={() => window.location.reload()}>Попробовать снова</Button>
+          <Button onClick={() => window.location.reload()}>
+            Попробовать снова
+          </Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl mb-6">Каталог СПА комплексов</h1>
-        
+
         {/* Search Row */}
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="relative w-full sm:w-64">
@@ -127,11 +144,11 @@ export function CatalogPage() {
             <Input
               placeholder="Поиск СПА..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
-          
+
           <Button
             variant="outline"
             onClick={() => setShowFilters(!showFilters)}
@@ -141,21 +158,18 @@ export function CatalogPage() {
             Фильтры
           </Button>
         </div>
-        
+
         {/* Filters Row - Always visible on desktop */}
         <div className={`mb-4 ${showFilters ? 'block' : 'hidden sm:block'}`}>
-          <SpaFiltersComponent 
-            filters={filters} 
-            onFiltersChange={setFilters}
-          />
+          <SpaFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
-        
+
         {/* Results Count and Sort Row */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <p className="text-muted-foreground">
             Найдено {filteredAndSortedSpas.length} СПА комплексов
           </p>
-          
+
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-48">
               <SelectValue />
@@ -174,7 +188,7 @@ export function CatalogPage() {
       <div>
         {filteredAndSortedSpas.length > 0 ? (
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredAndSortedSpas.map((spa) => (
+            {filteredAndSortedSpas.map(spa => (
               <SpaCard key={spa.id} spa={spa} />
             ))}
           </div>
@@ -186,16 +200,18 @@ export function CatalogPage() {
             <p className="text-muted-foreground mb-6">
               Попробуйте изменить параметры поиска или фильтры
             </p>
-            <Button onClick={() => {
-              setSearchTerm('');
-              setFilters({});
-              setSearchParams({}); // Очищаем URL параметры
-            }}>
+            <Button
+              onClick={() => {
+                setSearchTerm('')
+                setFilters({})
+                setSearchParams({}) // Очищаем URL параметры
+              }}
+            >
               Сбросить все фильтры
             </Button>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

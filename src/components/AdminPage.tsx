@@ -1,41 +1,58 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
-import { Plus, Edit, Trash2, Star, MapPin } from 'lucide-react';
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Button } from './ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Badge } from './ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './ui/table'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './ui/alert-dialog'
+import { Plus, Edit, Trash2, Star, MapPin } from 'lucide-react'
 // import { mockSpas } from '../data/mockData'; // Закомментировано - теперь используем Supabase
-import { useSpas, useSpaActions } from '../hooks/useSpas';
-import { toast } from 'sonner';
+import { useSpas, useSpaActions } from '../hooks/useSpas'
+import { toast } from 'sonner'
 
 export function AdminPage() {
   // Получаем данные из Supabase
-  const { spas, loading, error, refetch } = useSpas();
-  const { deleteSpa, loading: deleteLoading } = useSpaActions();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { spas, loading, error, refetch } = useSpas()
+  const { deleteSpa, loading: deleteLoading } = useSpaActions()
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const categoryLabels = {
     wellness: 'Wellness',
     thermal: 'Термальный',
     medical: 'Медицинский',
-    beauty: 'Beauty'
-  };
+    beauty: 'Beauty',
+  }
 
   const handleDelete = async (id: string) => {
     try {
-      setDeletingId(id);
-      await deleteSpa(id);
-      await refetch();
-      toast.success('СПА успешно удален');
+      setDeletingId(id)
+      await deleteSpa(id)
+      await refetch()
+      toast.success('СПА успешно удален')
     } catch (error) {
-      console.error('Error deleting spa:', error);
-      toast.error('Ошибка при удалении СПА');
+      console.error('Error deleting spa:', error)
+      toast.error('Ошибка при удалении СПА')
     } finally {
-      setDeletingId(null);
+      setDeletingId(null)
     }
-  };
+  }
 
   // Loading состояние
   if (loading) {
@@ -45,7 +62,7 @@ export function AdminPage() {
           <p className="text-muted-foreground text-lg">Загрузка...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // Error состояние
@@ -58,7 +75,7 @@ export function AdminPage() {
           <Button onClick={() => refetch()}>Попробовать снова</Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -95,16 +112,21 @@ export function AdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {spas.map((spa) => (
-                  <TableRow key={spa.id} className="cursor-pointer hover:bg-muted/50">
+                {spas.map(spa => (
+                  <TableRow
+                    key={spa.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                  >
                     <TableCell>
-                      <Link 
+                      <Link
                         to={`/admin/spa/${spa.id}/edit`}
                         className="hover:underline"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground">IMG</span>
+                            <span className="text-xs text-muted-foreground">
+                              IMG
+                            </span>
                           </div>
                           <div>
                             <div className="font-medium">{spa.name}</div>
@@ -128,14 +150,12 @@ export function AdminPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {spa.featured && (
-                          <Badge size="sm">Рекомендуем</Badge>
-                        )}
-                        <Badge 
-                          variant={spa.active ? "default" : "secondary"}
+                        {spa.featured && <Badge size="sm">Рекомендуем</Badge>}
+                        <Badge
+                          variant={spa.active ? 'default' : 'secondary'}
                           size="sm"
                         >
-                          {spa.active ? "Активен" : "Неактивен"}
+                          {spa.active ? 'Активен' : 'Неактивен'}
                         </Badge>
                       </div>
                     </TableCell>
@@ -148,8 +168,8 @@ export function AdminPage() {
                         </Link>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               disabled={deletingId === spa.id}
                             >
@@ -158,15 +178,17 @@ export function AdminPage() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Удалить СПА комплекс?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Удалить СПА комплекс?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Вы уверены, что хотите удалить "{spa.name}"? 
-                                Это действие нельзя будет отменить.
+                                Вы уверены, что хотите удалить "{spa.name}"? Это
+                                действие нельзя будет отменить.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Отмена</AlertDialogCancel>
-                              <AlertDialogAction 
+                              <AlertDialogAction
                                 onClick={() => handleDelete(spa.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
@@ -199,5 +221,5 @@ export function AdminPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

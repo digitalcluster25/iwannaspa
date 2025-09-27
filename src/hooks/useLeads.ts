@@ -41,7 +41,7 @@ export function useLead(id: string | undefined) {
 
   const loadLead = async () => {
     if (!id) return
-    
+
     try {
       setLoading(true)
       setError(null)

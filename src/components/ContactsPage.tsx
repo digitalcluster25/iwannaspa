@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Mail, Phone, MapPin, Clock } from 'lucide-react'
 
 export function ContactsPage() {
   const cities = [
@@ -7,27 +7,27 @@ export function ContactsPage() {
       name: 'Киев',
       phone: '+380 44 123 45 67',
       email: 'kiev@after.spa',
-      address: 'ул. Крещатик, 10, Киев, 01001'
+      address: 'ул. Крещатик, 10, Киев, 01001',
     },
     {
       name: 'Одесса',
       phone: '+380 48 123 45 67',
       email: 'odessa@after.spa',
-      address: 'ул. Дерибасовская, 15, Одесса, 65000'
+      address: 'ул. Дерибасовская, 15, Одесса, 65000',
     },
     {
       name: 'Львов',
       phone: '+380 32 123 45 67',
       email: 'lviv@after.spa',
-      address: 'пл. Рынок, 8, Львов, 79000'
+      address: 'пл. Рынок, 8, Львов, 79000',
     },
     {
       name: 'Буковель',
       phone: '+380 34 123 45 67',
       email: 'bukovel@after.spa',
-      address: 'ул. Горная, 25, Буковель, 78593'
-    }
-  ];
+      address: 'ул. Горная, 25, Буковель, 78593',
+    },
+  ]
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -70,7 +70,7 @@ export function ContactsPage() {
 
       {/* Cities */}
       <div className="grid md:grid-cols-2 gap-6">
-        {cities.map((city) => (
+        {cities.map(city => (
           <Card key={city.name}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -96,5 +96,5 @@ export function ContactsPage() {
         ))}
       </div>
     </div>
-  );
+  )
 }

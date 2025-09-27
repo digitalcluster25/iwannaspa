@@ -44,7 +44,7 @@ export function useSpa(id: string | undefined) {
 
   const loadSpa = async () => {
     if (!id) return
-    
+
     try {
       setLoading(true)
       setError(null)

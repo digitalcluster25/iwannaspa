@@ -133,7 +133,7 @@
  * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
  */
 @layer base {
-  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
     h1 {
       font-size: var(--text-2xl);
       font-weight: var(--font-weight-medium);
@@ -191,15 +191,15 @@ html {
 /* Admin leads table styles */
 .admin-table-grid {
   display: grid;
-  grid-template-columns: 
-    minmax(140px, 1fr)    /* Статус */
-    minmax(120px, 1fr)    /* Клиент - уменьшено на ~10px */
-    minmax(150px, 1.5fr)  /* СПА комплекс - уменьшено на ~10px */
-    minmax(110px, 1fr)    /* Сумма - увеличено для значений типа "150 000 ₴" */
-    minmax(140px, 1fr)    /* Телефон */
-    minmax(100px, 1fr)    /* Дата заявки */
-    minmax(120px, 1fr)    /* Дата бронирования */
-    minmax(90px, 0.7fr);  /* Действия */
+  grid-template-columns:
+    minmax(140px, 1fr) /* Статус */
+    minmax(120px, 1fr) /* Клиент - уменьшено на ~10px */
+    minmax(150px, 1.5fr) /* СПА комплекс - уменьшено на ~10px */
+    minmax(110px, 1fr) /* Сумма - увеличено для значений типа "150 000 ₴" */
+    minmax(140px, 1fr) /* Телефон */
+    minmax(100px, 1fr) /* Дата заявки */
+    minmax(120px, 1fr) /* Дата бронирования */
+    minmax(90px, 0.7fr); /* Действия */
   gap: 8px;
   align-items: center;
 }
