@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
-import { ArrowRight, Loader2, Droplets } from 'lucide-react';
+import { Loader2, Droplets } from 'lucide-react';
 import { useSpaSearch } from '@/hooks/useSpas';
 import { useCategories } from '@/hooks/useReferences';
 import { SpaCard } from './SpaCard';
@@ -42,7 +42,7 @@ export function HomePage() {
                 <span className="font-semibold transition-colors text-white">Iwanna</span>
               </Link>
               
-              <span className="transition-colors relative z-10 text-white/80">|</span>
+              <span className="transition-colors relative z-10 text-white">|</span>
               
               <Link 
                 to="/catalog" 
@@ -67,8 +67,8 @@ export function HomePage() {
             className="absolute inset-0" 
             style={{
               background: 'rgba(238, 230, 230, 0.14)',
-              backdropFilter: 'blur(4.5px)',
-              WebkitBackdropFilter: 'blur(4.5px)',
+              backdropFilter: 'blur(2px)',
+              WebkitBackdropFilter: 'blur(2px)',
             }}
           />
         </div>
@@ -83,7 +83,6 @@ export function HomePage() {
           <Link to="/catalog">
             <Button size="lg" className="text-lg px-8 py-3">
               Смотреть каталог
-              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
         </div>
