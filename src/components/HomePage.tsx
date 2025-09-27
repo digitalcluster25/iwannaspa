@@ -42,7 +42,7 @@ export function HomePage() {
                 <span className="font-semibold transition-colors text-white">Iwanna</span>
               </Link>
               
-              <span className="transition-colors relative z-10 text-white/60">|</span>
+              <span className="transition-colors relative z-10 text-white/80">|</span>
               
               <Link 
                 to="/catalog" 
