@@ -141,9 +141,11 @@ function AppContent() {
   // Публичная часть с семантичной структурой
   return (
     <>
-      <header>
-        <HomePageMenu />
-      </header>
+      {!isHomePage && (
+        <header>
+          <HomePageMenu />
+        </header>
+      )}
       
       <main>
         <Routes>
