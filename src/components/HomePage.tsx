@@ -62,6 +62,15 @@ export function HomePage() {
           }}
         >
           <div className="absolute inset-0 bg-black/40" />
+          {/* Glass effect overlay */}
+          <div 
+            className="absolute inset-0" 
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(2px)',
+              WebkitBackdropFilter: 'blur(2px)',
+            }}
+          />
         </div>
 
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
