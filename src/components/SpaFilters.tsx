@@ -17,11 +17,13 @@ import { useCategories, usePurposes, useCities } from '../hooks/useReferences'
 interface SpaFiltersProps {
   filters: SpaFilters
   onFiltersChange: (filters: SpaFilters) => void
+  showBadges?: boolean
 }
 
 export function SpaFiltersComponent({
   filters,
   onFiltersChange,
+  showBadges = true,
 }: SpaFiltersProps) {
   const [priceRange, setPriceRange] = useState([
     filters.minPrice || 1800,
@@ -164,7 +166,7 @@ export function SpaFiltersComponent({
         </div>
 
         {/* Active Filters Section - Below filters */}
-        {hasActiveFilters && (
+        {hasActiveFilters && showBadges && (
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <Button variant="ghost" size="sm" onClick={clearFilters}>
               Очистить

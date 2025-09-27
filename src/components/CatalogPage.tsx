@@ -9,11 +9,12 @@ import {
 } from './ui/select'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { Badge } from './ui/badge'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { SpaCard } from './SpaCard'
 import { SpaFiltersComponent } from './SpaFilters'
-// import { mockSpas } from '../data/mockData'; // Закомментировано - теперь используем Supabase
 import { useSpas } from '../hooks/useSpas'
+import { useCategories, usePurposes } from '../hooks/useReferences'
 import { SpaFilters } from '../types/spa'
 
 export function CatalogPage() {
@@ -25,6 +26,15 @@ export function CatalogPage() {
 
   // Получаем данные из Supabase
   const { spas, loading, error } = useSpas()
+  const { categories: categoriesData } = useCategories()
+  const { purposes: purposesData } = usePurposes()
+
+  const categories = categoriesData
+    .filter(c => c.active)
+    .map(c => ({ value: c.value, label: c.name }))
+  const purposes = purposesData
+    .filter(p => p.active)
+    .map(p => ({ value: p.value, label: p.name }))
 
   // Применяем фильтры из URL при загрузке
   useEffect(() => {
@@ -102,6 +112,22 @@ export function CatalogPage() {
     return result
   }, [spas, searchTerm, sortBy, filters])
 
+  const removeFilter = (key: keyof SpaFilters) => {
+    const newFilters = { ...filters }
+    delete newFilters[key]
+    if (key === 'minPrice' || key === 'maxPrice') {
+      delete newFilters.minPrice
+      delete newFilters.maxPrice
+    }
+    setFilters(newFilters)
+  }
+
+  const clearFilters = () => {
+    setFilters({})
+  }
+
+  const hasActiveFilters = Object.keys(filters).length > 0
+
   // Loading состояние
   if (loading) {
     return (
@@ -161,8 +187,82 @@ export function CatalogPage() {
 
         {/* Filters Row - Always visible on desktop */}
         <div className={`mb-4 ${showFilters ? 'block' : 'hidden sm:block'}`}>
-          <SpaFiltersComponent filters={filters} onFiltersChange={setFilters} />
+          <SpaFiltersComponent filters={filters} onFiltersChange={setFilters} showBadges={showFilters} />
         </div>
+
+        {/* Active Filters Badges - Show on mobile when filters are CLOSED */}
+        {hasActiveFilters && !showFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-4 sm:hidden">
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Очистить
+            </Button>
+            {filters.category && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {categories.find(c => c.value === filters.category)?.label}
+                <button
+                  type="button"
+                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  onClick={e => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    removeFilter('category')
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {filters.location && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {filters.location}
+                <button
+                  type="button"
+                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  onClick={e => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    removeFilter('location')
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {filters.purpose && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {purposes.find(p => p.value === filters.purpose)?.label}
+                <button
+                  type="button"
+                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  onClick={e => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    removeFilter('purpose')
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {(filters.minPrice || filters.maxPrice) && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {(filters.minPrice || 1800).toLocaleString()} -{' '}
+                {(filters.maxPrice || 3500).toLocaleString()} ₴
+                <button
+                  type="button"
+                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  onClick={e => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    removeFilter('minPrice')
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+          </div>
+        )}
 
         {/* Results Count and Sort Row */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -171,7 +271,7 @@ export function CatalogPage() {
           </p>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
