@@ -28,6 +28,7 @@ import {
 import { useSpa } from '../hooks/useSpas'
 import { useLeadActions } from '../hooks/useLeads'
 import { useCategories, usePurposes } from '../hooks/useReferences'
+import { useAuth } from '@/contexts/AuthContext'
 import { ImageWithFallback } from './figma/ImageWithFallback'
 import { CustomMap } from './CustomMap'
 import { SpaService } from '../types/spa'
@@ -39,6 +40,7 @@ interface SelectedService extends SpaService {
 
 export function SpaPage() {
   const { id } = useParams()
+  const { user } = useAuth() // Получаем текущего пользователя
 
   // Получаем данные из Supabase
   const { spa, loading, error } = useSpa(id)
@@ -172,7 +174,7 @@ export function SpaPage() {
         spaId: spa.id,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
-        customerEmail: undefined,
+        customerEmail: user?.email || undefined, // Автоматически подставляем email
         selectedServices: selectedServices.map(s => ({
           id: s.id,
           name: s.name,
@@ -395,7 +397,7 @@ export function SpaPage() {
                 </div>
               ) : (
                 <div className="space-y-4 mb-6">
-                  <h3 className="text-lg text-left">Связаться с менеджером</h3>
+                  <h3 className="text-lg text-left">Заявка</h3>
 
                   {/* Selected Services */}
                   {selectedServices.length > 0 && (
@@ -471,7 +473,7 @@ export function SpaPage() {
                       <Input
                         id="client-phone"
                         type="tel"
-                        placeholder="+380 XX XXX XX XX"
+                        placeholder="+1 234 567 8900"
                         className="w-full"
                         value={customerPhone}
                         onChange={e => setCustomerPhone(e.target.value)}
@@ -528,84 +530,92 @@ export function SpaPage() {
                       {creatingLead ? 'Отправка...' : 'Перезвоните мне'}
                     </Button>
                   </div>
+
+                  {/* Working Hours Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="text-lg mb-4">Время работы</h3>
+                    {spa.contactInfo?.workingHours ? (
+                      <p className="text-sm">{spa.contactInfo.workingHours}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Информация о времени работы уточняйте по телефону
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Location Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="text-lg mb-4">Расположение</h3>
+
+                    {spa.latitude && spa.longitude ? (
+                      <>
+                        <div
+                          className="rounded-lg overflow-hidden mb-4"
+                          style={{ height: '200px' }}
+                        >
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            style={{ border: 0 }}
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${spa.longitude - 0.01},${spa.latitude - 0.01},${spa.longitude + 0.01},${spa.latitude + 0.01}&layer=mapnik&marker=${spa.latitude},${spa.longitude}`}
+                            allowFullScreen
+                          ></iframe>
+                        </div>
+
+                        <div className="text-center mb-4">
+                          <a
+                            href={`https://www.openstreetmap.org/?mlat=${spa.latitude}&mlon=${spa.longitude}&zoom=15`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Открыть в OpenStreetMap
+                          </a>
+                        </div>
+
+                        {spa.address && (
+                          <p className="text-sm mb-2">
+                            <strong>Адрес:</strong> {spa.address}
+                          </p>
+                        )}
+
+                        {spa.addressComment && (
+                          <p className="text-sm text-muted-foreground">
+                            {spa.addressComment}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-muted h-32 rounded-lg flex items-center justify-center text-muted-foreground mb-4">
+                          Карта ({spa.location})
+                        </div>
+
+                        {spa.address ? (
+                          <p className="text-sm mb-2">
+                            <strong>Адрес:</strong> {spa.address}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Центральное расположение в {spa.location} с удобной
+                            транспортной доступностью
+                          </p>
+                        )}
+
+                        {spa.addressComment && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {spa.addressComment}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Working Hours Card */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg mb-4">Время работы</h3>
-              {spa.contactInfo?.workingHours ? (
-                <p className="text-sm">{spa.contactInfo.workingHours}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Информация о времени работы уточняйте по телефону
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Location Card */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg mb-4">Расположение</h3>
-
-              {spa.latitude && spa.longitude ? (
-                <>
-                  <div
-                    className="rounded-lg overflow-hidden mb-4"
-                    style={{ height: '200px' }}
-                  >
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      frameBorder="0"
-                      style={{ border: 0 }}
-                      src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${spa.latitude},${spa.longitude}&zoom=15&maptype=roadmap`}
-                      allowFullScreen
-                    ></iframe>
-                  </div>
-
-                  {spa.address && (
-                    <p className="text-sm mb-2">
-                      <strong>Адрес:</strong> {spa.address}
-                    </p>
-                  )}
-
-                  {spa.addressComment && (
-                    <p className="text-sm text-muted-foreground">
-                      {spa.addressComment}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="bg-muted h-32 rounded-lg flex items-center justify-center text-muted-foreground mb-4">
-                    Карта ({spa.location})
-                  </div>
-
-                  {spa.address ? (
-                    <p className="text-sm mb-2">
-                      <strong>Адрес:</strong> {spa.address}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Центральное расположение в {spa.location} с удобной
-                      транспортной доступностью
-                    </p>
-                  )}
-
-                  {spa.addressComment && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {spa.addressComment}
-                    </p>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

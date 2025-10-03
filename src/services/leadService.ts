@@ -107,6 +107,24 @@ export const leadService = {
     return data.map(this.transformLead)
   },
 
+  // Получить лиды по email пользователя
+  async getByUserEmail(email: string) {
+    const { data, error } = await supabase
+      .from('leads')
+      .select(
+        `
+        *,
+        spa:spas(id, name)
+      `
+      )
+      .eq('customer_email', email)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return data.map(this.transformLead)
+  },
+
   // Трансформация лида
   transformLead(data: any): Lead {
     return {

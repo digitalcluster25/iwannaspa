@@ -18,6 +18,12 @@ export function Footer() {
           <nav className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="flex items-center space-x-6">
               <Link
+                to="/business"
+                className="text-muted-foreground hover:text-primary transition-colors font-medium"
+              >
+                Для бизнеса
+              </Link>
+              <Link
                 to="/contacts"
                 className="text-muted-foreground hover:text-primary transition-colors"
               >

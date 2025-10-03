@@ -94,7 +94,7 @@ export function AdminLeadDetails() {
         <div className="text-center py-12">
           <p className="text-destructive text-lg mb-4">Ошибка загрузки</p>
           <p className="text-muted-foreground mb-6">{error.message}</p>
-          <Link to="/admin/leads">
+          <Link to="/adminko/leads">
             <Button>Вернуться к списку</Button>
           </Link>
         </div>
@@ -107,7 +107,7 @@ export function AdminLeadDetails() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h1 className="text-2xl mb-4">Лид не найден</h1>
-          <Link to="/admin/leads">
+          <Link to="/adminko/leads">
             <Button>Вернуться к списку</Button>
           </Link>
         </div>
@@ -120,7 +120,7 @@ export function AdminLeadDetails() {
       {/* Навигация */}
       <div className="mb-6">
         <Link
-          to="/admin/leads"
+          to="/adminko/leads"
           className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />

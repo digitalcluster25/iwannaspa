@@ -2,27 +2,21 @@ import { supabase } from '@/lib/supabase'
 import type { Spa, SpaFilters } from '@/types/spa'
 
 export const spaService = {
-  // Получить все СПА
+  // Получить все СПА (упрощенная версия для админки)
   async getAll() {
+    console.log('🔄 Fetching spas...')
     const { data, error } = await supabase
       .from('spas')
-      .select(
-        `
-        *,
-        city:cities(id, name),
-        services:spa_services(*),
-        amenities:spa_amenities(amenity:amenities(*)),
-        contact:spa_contacts(*)
-      `
-      )
+      .select('*')
       .eq('active', true)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching spas:', error)
+      console.error('❌ Error fetching spas:', error)
       throw error
     }
 
+    console.log('✅ Spas loaded:', data.length)
     // Трансформируем данные в нужный формат
     return this.transformSpas(data)
   },
@@ -364,21 +358,19 @@ export const spaService = {
       latitude: data.latitude,
       longitude: data.longitude,
       images: data.images || [],
-      amenities:
-        data.amenities
-          ?.map((a: any) => ({
-            name: a.amenity?.name,
-            description: a.amenity?.description,
-          }))
-          .filter((a: any) => a.name) || [],
-      services:
-        data.services?.map((s: any) => ({
-          id: s.id,
-          name: s.name,
-          description: s.description || '',
-          price: s.price,
-          image: s.image || '',
-        })) || [],
+      amenities: data.amenities
+        ?.map((a: any) => ({
+          name: a.amenity?.name,
+          description: a.amenity?.description,
+        }))
+        .filter((a: any) => a.name) || [],
+      services: data.services?.map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description || '',
+        price: s.price,
+        image: s.image || '',
+      })) || [],
       contactInfo: data.contact
         ? {
             phone: data.contact.phone || '',

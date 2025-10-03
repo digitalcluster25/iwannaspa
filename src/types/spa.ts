@@ -14,6 +14,30 @@ export interface ContactInfo {
   telegram?: string
 }
 
+// Brand interface
+export interface Brand {
+  id: string
+  name: string
+  description: string | null
+  logo: string | null
+  active: boolean
+  owner_id: string | null
+  created_at: string
+  updated_at: string
+  owner?: UserProfile // Загружается при необходимости
+}
+
+// User Profile interface
+export interface UserProfile {
+  id: string
+  name: string | null
+  phone: string | null
+  role: 'admin' | 'vendor' | 'user'
+  active: boolean // Активирован ли вендор
+  created_at: string
+  updated_at: string
+}
+
 export interface Spa {
   id: string
   name: string
@@ -38,6 +62,9 @@ export interface Spa {
   featured: boolean
   active: boolean
   createdAt: string
+  city?: City // Связь с городом
+  brand_id?: string // Привязка к бренду
+  brand?: Brand // Загружается при необходимости
 }
 
 export interface SpaFilters {
@@ -47,13 +74,24 @@ export interface SpaFilters {
   maxPrice?: number
   minRating?: number
   location?: string
+  country?: string
   featured?: boolean
 }
 
 // Reference data types
+export interface Country {
+  id: string
+  name: string
+  code: string
+  active: boolean
+}
+
 export interface City {
   id: string
   name: string
+  countryId?: string
+  country?: Country
+  district?: string // Район города
   active: boolean
 }
 
@@ -76,6 +114,17 @@ export interface Amenity {
   name: string
   description?: string
   active: boolean
+}
+
+// SPA Amenity - кастомное описание удобства для конкретного СПА
+export interface SpaAmenity {
+  id: string
+  spa_id: string
+  amenity_id: string
+  custom_description: string | null
+  created_at: string
+  updated_at: string
+  amenity?: Amenity // Загружается при необходимости
 }
 
 export interface ServiceTemplate {

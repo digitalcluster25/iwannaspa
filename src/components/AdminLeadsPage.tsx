@@ -216,7 +216,7 @@ export function AdminLeadsPage() {
 
               {/* Действия */}
               <div className="flex items-center justify-end">
-                <Link to={`/admin/leads/${lead.id}`}>
+                <Link to={`/adminko/leads/${lead.id}`}>
                   <Button size="sm" variant="outline" className="h-8">
                     <span className="text-xs">Подробнее</span>
                   </Button>

@@ -79,15 +79,15 @@ export function AdminPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl mb-2">Управление СПА комплексами</h1>
-          <p className="text-muted-foreground">
-            Добавляйте, редактируйте и удаляйте СПА комплексы
+          <h1 className="text-2xl font-semibold">СПА комплексы</h1>
+          <p className="text-sm text-muted-foreground">
+            Управляйте СПА комплексами
           </p>
         </div>
-        <Link to="/admin/spa/new">
+        <Link to="/adminko/spa/new">
           <Button size="lg">
             <Plus className="h-4 w-4 mr-2" />
             Добавить СПА
@@ -119,7 +119,7 @@ export function AdminPage() {
                   >
                     <TableCell>
                       <Link
-                        to={`/admin/spa/${spa.id}/edit`}
+                        to={`/adminko/spa/${spa.id}/edit`}
                         className="hover:underline"
                       >
                         <div className="flex items-center gap-3">
@@ -161,7 +161,7 @@ export function AdminPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link to={`/admin/spa/${spa.id}/edit`}>
+                        <Link to={`/adminko/spa/${spa.id}/edit`}>
                           <Button variant="outline" size="sm">
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -210,7 +210,7 @@ export function AdminPage() {
               <div className="text-muted-foreground mb-4">
                 СПА комплексы не найдены
               </div>
-              <Link to="/admin/spa/new">
+              <Link to="/adminko/spa/new">
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Добавить первый СПА

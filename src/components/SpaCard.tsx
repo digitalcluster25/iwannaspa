@@ -60,7 +60,15 @@ export function SpaCard({ spa }: SpaCardProps) {
 
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <MapPin className="h-4 w-4" />
-          {spa.location}
+          <span>{spa.location}</span>
+          {spa.city?.district && (
+            <>
+              <span className="mx-1">•</span>
+              <span className="text-xs bg-muted px-2 py-1 rounded">
+                {spa.city.district}
+              </span>
+            </>
+          )}
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-2">

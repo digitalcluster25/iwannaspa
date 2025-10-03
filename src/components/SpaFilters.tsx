@@ -12,7 +12,7 @@ import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { X } from 'lucide-react'
 import { SpaFilters } from '../types/spa'
-import { useCategories, usePurposes, useCities } from '../hooks/useReferences'
+import { useCategories, usePurposes, useCities, useCountries } from '../hooks/useReferences'
 
 interface SpaFiltersProps {
   filters: SpaFilters
@@ -34,6 +34,7 @@ export function SpaFiltersComponent({
   const { categories: categoriesData } = useCategories()
   const { purposes: purposesData } = usePurposes()
   const { cities: citiesData } = useCities()
+  const { countries: countriesData } = useCountries()
 
   const categories = categoriesData
     .filter(c => c.active)
@@ -42,6 +43,7 @@ export function SpaFiltersComponent({
     .filter(p => p.active)
     .map(p => ({ value: p.value, label: p.name }))
   const locations = citiesData.filter(c => c.active).map(c => c.name)
+  const countries = countriesData.filter(c => c.active).map(c => ({ value: c.id, label: c.name }))
 
   const handlePriceChange = (value: number[]) => {
     setPriceRange(value)
@@ -78,9 +80,31 @@ export function SpaFiltersComponent({
 
       <CardContent className="space-y-4">
         {/* Horizontal Filters Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex gap-4">
+          {/* Country Filter */}
+          <div className="space-y-2 flex-1">
+            <label className="text-sm">Страна</label>
+            <Select
+              value={filters.country || ''}
+              onValueChange={value =>
+                onFiltersChange({ ...filters, country: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Все страны" />
+              </SelectTrigger>
+              <SelectContent>
+                {countries.map(country => (
+                  <SelectItem key={country.value} value={country.value}>
+                    {country.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Location Filter */}
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <label className="text-sm">Город</label>
             <Select
               value={filters.location || ''}
@@ -102,7 +126,7 @@ export function SpaFiltersComponent({
           </div>
 
           {/* Category Filter */}
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <label className="text-sm">Категория услуг</label>
             <Select
               value={filters.category || ''}
@@ -124,7 +148,7 @@ export function SpaFiltersComponent({
           </div>
 
           {/* Purpose Filter */}
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <label className="text-sm">Цель посещения</label>
             <Select
               value={filters.purpose || ''}
@@ -146,21 +170,37 @@ export function SpaFiltersComponent({
           </div>
 
           {/* Price Range */}
-          <div className="space-y-3">
-            <label className="text-sm">Цена за процедуру</label>
-            <div className="px-2">
-              <Slider
-                value={priceRange}
-                onValueChange={handlePriceChange}
-                max={3500}
-                min={1800}
-                step={100}
-                className="w-full"
-              />
+          <div className="space-y-3 flex-[1.5]">
+            <div>
+              <label className="text-sm font-semibold">Цена за процедуру</label>
+              <p className="text-sm text-muted-foreground mt-1">
+                {priceRange[0].toLocaleString()} ₴ — {priceRange[1].toLocaleString()}+ ₴
+              </p>
             </div>
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{priceRange[0].toLocaleString()} ₴</span>
-              <span>{priceRange[1].toLocaleString()} ₴</span>
+            
+            <div className="space-y-6 pt-4">
+              {/* Гистограмма */}
+              <div className="flex items-end justify-between gap-1 h-16 px-2">
+                {[30, 45, 60, 80, 90, 70, 85, 95, 75, 60, 55, 40, 50, 45, 35, 30, 25, 20, 15, 10].map((height, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 bg-gray-400 rounded-sm opacity-70"
+                    style={{ height: `${height}%` }}
+                  />
+                ))}
+              </div>
+              
+              {/* Слайдер под гистограммой */}
+              <div className="px-2 py-2">
+                <Slider
+                  value={priceRange}
+                  onValueChange={handlePriceChange}
+                  max={3500}
+                  min={1800}
+                  step={100}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -171,6 +211,22 @@ export function SpaFiltersComponent({
             <Button variant="ghost" size="sm" onClick={clearFilters}>
               Очистить
             </Button>
+            {filters.country && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {countries.find(c => c.value === filters.country)?.label}
+                <button
+                  type="button"
+                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  onClick={e => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    removeFilter('country')
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
             {filters.category && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 {categories.find(c => c.value === filters.category)?.label}

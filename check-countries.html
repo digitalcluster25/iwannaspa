@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка таблицы countries</title>
+</head>
+<body>
+    <h1>Проверка таблицы countries</h1>
+    <div id="result"></div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2'
+
+        // Получаем переменные из localStorage или используем тестовые
+        const supabaseUrl = localStorage.getItem('VITE_SUPABASE_URL') || 'YOUR_SUPABASE_URL'
+        const supabaseKey = localStorage.getItem('VITE_SUPABASE_ANON_KEY') || 'YOUR_SUPABASE_ANON_KEY'
+
+        const resultDiv = document.getElementById('result')
+
+        if (supabaseUrl === 'YOUR_SUPABASE_URL' || supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+            resultDiv.innerHTML = `
+                <p>❌ Необходимо настроить переменные Supabase</p>
+                <p>Откройте консоль браузера и выполните:</p>
+                <pre>
+localStorage.setItem('VITE_SUPABASE_URL', 'your_supabase_url')
+localStorage.setItem('VITE_SUPABASE_ANON_KEY', 'your_supabase_anon_key')
+                </pre>
+                <p>Затем обновите страницу</p>
+            `
+        } else {
+            const supabase = createClient(supabaseUrl, supabaseKey)
+
+            async function checkCountries() {
+                try {
+                    resultDiv.innerHTML = '<p>🔍 Проверяем подключение...</p>'
+                    
+                    const { data: countries, error } = await supabase
+                        .from('countries')
+                        .select('*')
+
+                    if (error) {
+                        resultDiv.innerHTML = `
+                            <p>❌ Ошибка: ${error.message}</p>
+                            <p>Возможно, таблица countries не создана.</p>
+                            <p>Выполните миграцию из файла MIGRATION_INSTRUCTIONS.md</p>
+                        `
+                    } else {
+                        resultDiv.innerHTML = `
+                            <p>✅ Подключение успешно!</p>
+                            <p>📊 Найдено стран: ${countries?.length || 0}</p>
+                            ${countries && countries.length > 0 ? 
+                                `<p>🌍 Страны: ${countries.map(c => \`\${c.name} (\${c.code})\`).join(', ')}</p>` : 
+                                '<p>⚠️ Страны не найдены. Выполните миграцию.</p>'
+                            }
+                        `
+                    }
+                } catch (err) {
+                    resultDiv.innerHTML = `<p>💥 Ошибка: ${err.message}</p>`
+                }
+            }
+
+            checkCountries()
+        }
+    </script>
+</body>
+</html>
+
+
+
+

@@ -5,18 +5,80 @@ import type {
   Purpose,
   Amenity,
   ServiceTemplate,
+  Country,
 } from '@/types/spa'
+
+// Сервис для работы со странами
+export const countryService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('countries')
+      .select('*')
+      .order('name')
+
+    if (error) throw error
+    return data as Country[]
+  },
+
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('countries')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw error
+    return data as Country
+  },
+
+  async create(country: { name: string; code: string; active?: boolean }) {
+    const { data, error } = await supabase
+      .from('countries')
+      .insert(country)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data as Country
+  },
+
+  async update(id: string, country: Partial<Country>) {
+    const { data, error } = await supabase
+      .from('countries')
+      .update(country)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data as Country
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase.from('countries').delete().eq('id', id)
+
+    if (error) throw error
+  },
+}
 
 // Сервис для работы с городами
 export const cityService = {
   async getAll() {
     const { data, error } = await supabase
       .from('cities')
-      .select('*')
+      .select(`
+        *,
+        country:countries(*)
+      `)
       .order('name')
 
     if (error) throw error
-    return data as City[]
+    
+    // Преобразуем country_id в countryId для фронтенда
+    return data.map(city => ({
+      ...city,
+      countryId: city.country_id,
+    })) as City[]
   },
 
   async getById(id: string) {
@@ -30,10 +92,16 @@ export const cityService = {
     return data as City
   },
 
-  async create(city: { name: string; active?: boolean }) {
+  async create(city: { name: string; countryId?: string; active?: boolean }) {
+    const cityData = {
+      name: city.name,
+      country_id: city.countryId,
+      active: city.active,
+    }
+    
     const { data, error } = await supabase
       .from('cities')
-      .insert(city)
+      .insert(cityData)
       .select()
       .single()
 
@@ -42,9 +110,17 @@ export const cityService = {
   },
 
   async update(id: string, city: Partial<City>) {
+    const cityData: any = { ...city }
+    
+    // Преобразуем countryId в country_id для базы данных
+    if (cityData.countryId !== undefined) {
+      cityData.country_id = cityData.countryId
+      delete cityData.countryId
+    }
+    
     const { data, error } = await supabase
       .from('cities')
-      .update(city)
+      .update(cityData)
       .eq('id', id)
       .select()
       .single()
@@ -199,7 +275,7 @@ export const amenityService = {
     return data as Amenity
   },
 
-  async create(amenity: { name: string; active?: boolean }) {
+  async create(amenity: { name: string; description?: string; active?: boolean }) {
     const { data, error } = await supabase
       .from('amenities')
       .insert(amenity)

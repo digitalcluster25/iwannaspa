@@ -5,6 +5,7 @@ import {
   purposeService,
   amenityService,
   serviceTemplateService,
+  countryService,
 } from '@/services/referenceService'
 import type {
   City,
@@ -12,7 +13,36 @@ import type {
   Purpose,
   Amenity,
   ServiceTemplate,
+  Country,
 } from '@/types/spa'
+
+// Хук для работы со странами
+export function useCountries() {
+  const [countries, setCountries] = useState<Country[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    loadCountries()
+  }, [])
+
+  const loadCountries = async () => {
+    try {
+      setLoading(true)
+      console.log('🌍 Loading countries...')
+      const data = await countryService.getAll()
+      console.log('✅ Countries loaded:', data.length)
+      setCountries(data)
+    } catch (err) {
+      console.error('❌ Error loading countries:', err)
+      setError(err as Error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { countries, loading, error, refetch: loadCountries }
+}
 
 // Хук для работы с городами
 export function useCities() {

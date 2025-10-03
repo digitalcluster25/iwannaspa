@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
-import { Loader2, Droplets } from 'lucide-react';
+import { Loader2, Droplets, User } from 'lucide-react';
 import { useSpaSearch } from '@/hooks/useSpas';
 import { useCategories } from '@/hooks/useReferences';
+import { useAuth } from '@/contexts/AuthContext';
 import { SpaCard } from './SpaCard';
 
 export function HomePage() {
   const { spas: featuredSpas, loading } = useSpaSearch({ featured: true });
   const { categories } = useCategories();
+  const { user } = useAuth();
 
   return (
     <>
@@ -50,6 +52,26 @@ export function HomePage() {
               >
                 Каталог СПА
               </Link>
+
+              <span className="transition-colors relative z-10 text-white/50">|</span>
+
+              {user ? (
+                <Link 
+                  to="/profile" 
+                  className="text-sm font-medium transition-colors relative z-10 text-white hover:text-white/80 flex items-center gap-1"
+                >
+                  <User className="h-4 w-4" />
+                  Профиль
+                </Link>
+              ) : (
+                <Link 
+                  to="/user-auth" 
+                  className="text-sm font-medium transition-colors relative z-10 text-white hover:text-white/80 flex items-center gap-1"
+                >
+                  <User className="h-4 w-4" />
+                  Войти
+                </Link>
+              )}
             </div>
           </div>
         </div>

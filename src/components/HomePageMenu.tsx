@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Droplets } from 'lucide-react';
+import { Droplets, User } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 export function HomePageMenu() {
+  const { user } = useAuth();
+
   return (
     <div className="flex items-center justify-center py-4">
       <div className="
@@ -37,6 +41,24 @@ export function HomePageMenu() {
         >
           Каталог СПА
         </Link>
+
+        <span className="transition-colors relative z-10 text-zinc-300">|</span>
+
+        {user ? (
+          <Link to="/profile" className="relative z-10">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <User className="h-4 w-4" />
+              Профиль
+            </Button>
+          </Link>
+        ) : (
+          <Link to="/user-auth" className="relative z-10">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <User className="h-4 w-4" />
+              Войти
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );

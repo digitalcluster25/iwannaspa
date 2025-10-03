@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { spaService } from '@/services/spaService'
 import type { Spa, SpaFilters } from '@/types/spa'
+import { toast } from 'sonner'
 
 export function useSpas() {
   const [spas, setSpas] = useState<Spa[]>([])
@@ -22,7 +23,7 @@ export function useSpas() {
     } catch (err) {
       console.error('❌ Error loading spas:', err)
       setError(err as Error)
-      console.error('Error loading spas:', err)
+      toast.error('Ошибка загрузки СПА комплексов')
     } finally {
       setLoading(false)
     }
