@@ -20,6 +20,8 @@ import { ArrowLeft, Save, X, Plus, Trash2 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 // import { mockSpas, mockCities, mockCategories, mockPurposes, mockAmenities, mockServiceTemplates } from '../data/mockData'; // Закомментировано
 import { useSpa, useSpaActions } from '../hooks/useSpas'
+import { useBrands } from '../hooks/useBrands'
+import { useSpaAmenities, useAvailableAmenities } from '../hooks/useSpaAmenities'
 import {
   useCities,
   useCategories,
@@ -55,6 +57,7 @@ export function AdminSpaEdit() {
 
   // Получаем данные из Supabase
   const { spa, loading: spaLoading } = useSpa(id)
+  const { brands, loading: brandsLoading } = useBrands()
   const { cities, loading: citiesLoading } = useCities()
   const { categories, loading: categoriesLoading } = useCategories()
   const { purposes, loading: purposesLoading } = usePurposes()
@@ -62,6 +65,10 @@ export function AdminSpaEdit() {
   const { services: serviceTemplates, loading: servicesLoading } =
     useServiceTemplates()
   const { createSpa, updateSpa, loading: saving } = useSpaActions()
+  
+  // Удобства СПА
+  const { spaAmenities, loading: spaAmenitiesLoading, addAmenity, updateAmenity, removeAmenity } = useSpaAmenities(id)
+  const { availableAmenities, loading: availableAmenitiesLoading } = useAvailableAmenities(id)
 
   const [formData, setFormData] = useState<Partial<Spa>>({
     name: '',
@@ -90,6 +97,7 @@ export function AdminSpaEdit() {
     },
     featured: false,
     active: true,
+    brand_id: 'none', // Добавляем поле для бренда
   })
 
   const [selectedAmenityId, setSelectedAmenityId] = useState('')
@@ -108,6 +116,8 @@ export function AdminSpaEdit() {
         // Инициализируем categories и purposes для мультивыбора
         categories: spa.categories || (spa.category ? [spa.category] : []),
         purposes: spa.purposes || (spa.purpose ? [spa.purpose] : []),
+        // Преобразуем null brand_id в 'none'
+        brand_id: spa.brand_id || 'none',
       })
     }
   }, [spa, isNew])
@@ -148,32 +158,6 @@ export function AdminSpaEdit() {
     setFormData(prev => ({
       ...prev,
       images: newImages || [''],
-    }))
-  }
-
-  const addAmenity = () => {
-    if (selectedAmenityId) {
-      const selectedAmenity = amenityOptions.find(
-        a => a.id === selectedAmenityId
-      )
-      if (
-        selectedAmenity &&
-        !formData.amenities?.includes(selectedAmenity.name)
-      ) {
-        setFormData(prev => ({
-          ...prev,
-          amenities: [...(prev.amenities || []), selectedAmenity.name],
-        }))
-        setSelectedAmenityId('')
-      }
-    }
-  }
-
-  const removeAmenity = (index: number) => {
-    const newAmenities = formData.amenities?.filter((_, i) => i !== index)
-    setFormData(prev => ({
-      ...prev,
-      amenities: newAmenities || [],
     }))
   }
 
@@ -275,6 +259,7 @@ export function AdminSpaEdit() {
         },
         featured: formData.featured || false,
         active: formData.active ?? true,
+        brand_id: formData.brand_id === 'none' ? null : formData.brand_id,
       }
 
       if (isNew) {
@@ -398,6 +383,30 @@ export function AdminSpaEdit() {
                       />
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="brand">Бренд</Label>
+                      <Select
+                        value={formData.brand_id || 'none'}
+                        onValueChange={value =>
+                          handleInputChange('brand_id', value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите бренд" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Без бренда</SelectItem>
+                          {brands.map(brand => (
+                            <SelectItem key={brand.id} value={brand.id}>
+                              {brand.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="location">Город *</Label>
                       <Select
@@ -675,70 +684,105 @@ export function AdminSpaEdit() {
               {/* Amenities */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Удобства</CardTitle>
+                  <CardTitle>Удобства СПА</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Select
-                      value={selectedAmenityId}
-                      onValueChange={setSelectedAmenityId}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Выберите удобство" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {amenityOptions
-                          .filter(
-                            amenity =>
-                              !formData.amenities?.includes(amenity.name)
-                          )
-                          .map(amenity => (
+                  {/* Добавление нового удобства */}
+                  <div className="p-4 border rounded-lg space-y-4">
+                    <h4 className="font-medium">Добавить удобство</h4>
+                    <div className="flex items-center gap-3">
+                      <Select
+                        value={selectedAmenityId}
+                        onValueChange={setSelectedAmenityId}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Выберите удобство" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableAmenities.map(amenity => (
                             <SelectItem key={amenity.id} value={amenity.id}>
                               {amenity.name}
                             </SelectItem>
                           ))}
-                      </SelectContent>
-                    </Select>
-                    <Button type="button" onClick={addAmenity}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        type="button" 
+                        onClick={async () => {
+                          if (selectedAmenityId) {
+                            try {
+                              await addAmenity(selectedAmenityId)
+                              setSelectedAmenityId('')
+                            } catch (error) {
+                              console.error('Error adding amenity:', error)
+                            }
+                          }
+                        }}
+                        disabled={!selectedAmenityId || spaAmenitiesLoading}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
-                  {formData.amenities && formData.amenities.length > 0 && (
+                  {/* Список добавленных удобств */}
+                  {spaAmenities.length > 0 && (
                     <div className="space-y-4">
-                      <h4 className="font-medium">Существующие удобства</h4>
+                      <h4 className="font-medium">Добавленные удобства</h4>
                       <div className="grid gap-4">
-                        {formData.amenities.map((amenity, index) => (
+                        {spaAmenities.map((spaAmenity) => (
                           <div
-                            key={index}
+                            key={`${spaAmenity.spa_id}-${spaAmenity.amenity_id}`}
                             className="flex items-center justify-between p-4 border rounded-lg"
                           >
-                            <Input
-                              value={amenity}
-                              onChange={e => {
-                                const newAmenities = [
-                                  ...(formData.amenities || []),
-                                ]
-                                newAmenities[index] = e.target.value
-                                setFormData(prev => ({
-                                  ...prev,
-                                  amenities: newAmenities,
-                                }))
-                              }}
-                              className="flex-1 mr-3"
-                              placeholder="Название удобства"
-                            />
+                            <div className="flex-1 space-y-2">
+                              <div className="font-medium">
+                                {spaAmenity.amenity?.name || 'Неизвестное удобство'}
+                              </div>
+                              <Textarea
+                                value={spaAmenity.custom_description || ''}
+                                onChange={async (e) => {
+                                  try {
+                                    await updateAmenity(spaAmenity.amenity_id, e.target.value || undefined)
+                                  } catch (error) {
+                                    console.error('Error updating amenity:', error)
+                                  }
+                                }}
+                                placeholder="Кастомное описание удобства (опционально)"
+                                rows={2}
+                                className="text-sm"
+                              />
+                            </div>
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={() => removeAmenity(index)}
+                              onClick={async () => {
+                                try {
+                                  await removeAmenity(spaAmenity.amenity_id)
+                                } catch (error) {
+                                  console.error('Error removing amenity:', error)
+                                }
+                              }}
+                              className="ml-3"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {spaAmenities.length === 0 && !spaAmenitiesLoading && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Удобства не добавлены
+                    </div>
+                  )}
+
+                  {spaAmenitiesLoading && (
+                    <div className="text-center py-8">
+                      Загрузка удобств...
                     </div>
                   )}
                 </CardContent>

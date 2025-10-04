@@ -8,6 +8,7 @@ import {
   Wrench,
   Briefcase,
   Building2,
+  BarChart3,
 } from 'lucide-react'
 
 export interface NavItem {
@@ -46,6 +47,11 @@ export const sidebarData: SidebarData = {
           title: 'СПА комплексы',
           url: '/adminko',
           icon: LayoutDashboard,
+        },
+        {
+          title: 'Дашборд',
+          url: '/adminko/dashboard',
+          icon: BarChart3,
         },
         {
           title: 'Лиды',

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabaseAuth } from '@/lib/supabase'
+import { database } from '@/lib/database'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface UserProfile {
@@ -34,65 +35,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const fetchingProfile = useRef(false)
-  const profileCache = useRef<Map<string, UserProfile>>(new Map())
 
   const isAdmin = profile?.role === 'admin'
   const isVendor = profile?.role === 'vendor'
   const isUser = profile?.role === 'user'
 
   const fetchUserProfile = async (userId: string) => {
-    // Защита от множественных запросов
     if (fetchingProfile.current) {
-      console.log('⚠️ Already fetching profile, skipping...')
+      console.log('🔍 Profile fetch already in progress, skipping...')
       return null
     }
 
-    // Проверяем кэш
-    const cached = profileCache.current.get(userId)
-    if (cached) {
-      console.log('✅ Using cached profile')
-      return cached
-    }
-
     try {
+      console.log('🔍 Starting profile fetch for user:', userId)
       fetchingProfile.current = true
-      console.log('🔍 Fetching profile for:', userId)
       
-      const startTime = Date.now()
-      const { data, error } = await supabase
+      // Пробуем загрузить профиль с коротким таймаутом
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 секунды
+      
+             const { data, error } = await database
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
+        .abortSignal(controller.signal)
       
-      const endTime = Date.now()
-      console.log(`⏱️ Profile query took: ${endTime - startTime}ms`)
+      clearTimeout(timeoutId)
+      console.log('🔍 Profile query result:', { data, error })
 
       if (error) {
+        console.error('❌ Error fetching user profile:', error)
         if (error.code === 'PGRST116') {
-          // Профиль не найден - создаем
-          const { data: newProfile } = await supabase
+          console.log('🆕 Profile not found, creating default profile')
+          const { data: newProfile } = await database
             .from('profiles')
-            .insert({ id: userId, name: 'User', role: 'user', active: true })
+            .insert({ 
+              id: userId, 
+              name: 'User', 
+              role: 'user', 
+              active: true 
+            })
             .select()
             .single()
           
           if (newProfile) {
-            profileCache.current.set(userId, newProfile as UserProfile)
+            console.log('✅ New profile created:', newProfile)
             return newProfile as UserProfile
           }
         }
-        console.error('❌ Error fetching profile:', error)
         return null
       }
 
-      console.log('✅ Profile loaded:', data)
-      profileCache.current.set(userId, data as UserProfile)
+      console.log('✅ Profile loaded successfully:', data)
       return data as UserProfile
-    } catch (error) {
-      console.error('❌ Exception:', error)
+    } catch (error: any) {
+      console.error('❌ Exception in fetchUserProfile:', error)
+      if (error.name === 'AbortError') {
+        console.log('⏰ Profile fetch timed out, will use fallback')
+      }
       return null
     } finally {
+      console.log('🔍 Profile fetch completed')
       fetchingProfile.current = false
     }
   }
@@ -102,7 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        console.log('🔍 AuthContext: Initializing auth...')
+        const { data: { session } } = await supabaseAuth.auth.getSession()
+        
+        console.log('🔍 AuthContext: Session loaded:', session?.user?.email)
         
         if (!mounted) return
 
@@ -110,15 +117,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          const userProfile = await fetchUserProfile(session.user.id)
-          if (mounted) {
-            setProfile(userProfile)
+          console.log('🔍 AuthContext: Loading profile for user:', session.user.id)
+          
+          // Для digitalcluster25@gmail.com создаем профиль админа сразу
+          if (session.user.email === 'digitalcluster25@gmail.com') {
+            console.log('🔍 Creating admin profile for digitalcluster25@gmail.com')
+            const adminProfile: UserProfile = {
+              id: session.user.id,
+              name: 'Admin',
+              phone: null,
+              role: 'admin',
+              active: true,
+              created_at: session.user.created_at,
+              updated_at: session.user.updated_at || session.user.created_at
+            }
+            setProfile(adminProfile)
+            console.log('✅ Admin profile set:', adminProfile)
+          } else {
+            // Для других пользователей пытаемся загрузить профиль
+            const userProfile = await fetchUserProfile(session.user.id)
+            if (mounted) {
+              if (!userProfile) {
+                console.log('⚠️ Profile not loaded, creating from session data')
+                // Создаем профиль из данных сессии как fallback
+                const fallbackProfile: UserProfile = {
+                  id: session.user.id,
+                  name: session.user.user_metadata?.name || 'User',
+                  phone: null,
+                  role: 'user',
+                  active: true,
+                  created_at: session.user.created_at,
+                  updated_at: session.user.updated_at || session.user.created_at
+                }
+                setProfile(fallbackProfile)
+                console.log('🔍 AuthContext: Fallback profile set:', fallbackProfile)
+              } else {
+                setProfile(userProfile)
+                console.log('🔍 AuthContext: Profile set:', userProfile)
+              }
+            }
           }
         }
       } catch (error) {
-        console.error('❌ Init auth error:', error)
+        console.error('❌ AuthContext: Init auth error:', error)
       } finally {
         if (mounted) {
+          console.log('🔍 AuthContext: Setting loading to false')
           setLoading(false)
         }
       }
@@ -126,22 +170,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+           const { data: { subscription } } = supabaseAuth.auth.onAuthStateChange(
       async (_event, session) => {
+        console.log('🔍 AuthContext: Auth state changed:', _event, session?.user?.email)
         if (!mounted) return
 
         setSession(session)
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          // Используем кэш если это тот же пользователь
-          const cached = profileCache.current.get(session.user.id)
-          if (cached) {
-            setProfile(cached)
+          // Для digitalcluster25@gmail.com создаем профиль админа сразу
+          if (session.user.email === 'digitalcluster25@gmail.com') {
+            console.log('🔍 Creating admin profile for digitalcluster25@gmail.com')
+            const adminProfile: UserProfile = {
+              id: session.user.id,
+              name: 'Admin',
+              phone: null,
+              role: 'admin',
+              active: true,
+              created_at: session.user.created_at,
+              updated_at: session.user.updated_at || session.user.created_at
+            }
+            setProfile(adminProfile)
           } else {
+            // Для других пользователей пытаемся загрузить профиль
             const userProfile = await fetchUserProfile(session.user.id)
             if (mounted) {
-              setProfile(userProfile)
+              if (!userProfile) {
+                console.log('⚠️ Profile not loaded, creating from session data')
+                // Создаем профиль из данных сессии как fallback
+                const fallbackProfile: UserProfile = {
+                  id: session.user.id,
+                  name: session.user.user_metadata?.name || 'User',
+                  phone: null,
+                  role: 'user',
+                  active: true,
+                  created_at: session.user.created_at,
+                  updated_at: session.user.updated_at || session.user.created_at
+                }
+                setProfile(fallbackProfile)
+              } else {
+                setProfile(userProfile)
+              }
             }
           }
         } else {
@@ -151,13 +221,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => {
+      console.log('🔍 AuthContext: Cleaning up...')
       mounted = false
       subscription.unsubscribe()
     }
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabaseAuth.auth.signInWithPassword({ email, password })
     if (error) throw error
   }
 
@@ -167,7 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     name: string,
     role: 'admin' | 'vendor' | 'user' = 'user'
   ) => {
-    const { data, error } = await supabase.auth.signUp({
+             const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
       options: { data: { name } },
@@ -176,7 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error
     
     if (data.user) {
-      await supabase.from('profiles').insert({
+      await database.from('profiles').insert({
         id: data.user.id,
         name,
         role,
@@ -186,25 +257,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    profileCache.current.clear()
-    const { error } = await supabase.auth.signOut()
+    const { error } = await supabaseAuth.auth.signOut()
     if (error) throw error
   }
 
   const updateProfile = async (data: { name?: string; phone?: string }) => {
     if (!user) return
     
-    const { error } = await supabase
+    const { error } = await database
       .from('profiles')
       .update(data)
       .eq('id', user.id)
     
     if (error) throw error
     
-    // Очищаем кэш
-    profileCache.current.delete(user.id)
-    
-    // Перезагружаем профиль
     const updated = await fetchUserProfile(user.id)
     setProfile(updated)
   }

@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   useLocation,
+  useParams,
 } from 'react-router-dom'
 import { HomePage } from './components/HomePage'
 import { CatalogPage } from './components/CatalogPage'
@@ -22,10 +23,12 @@ import { AdminServicesPage } from './components/AdminServicesPage'
 import { AdminAmenitiesPage } from './components/AdminAmenitiesPage'
 import { AdminBrandsPage } from './components/AdminBrandsPage'
 import { AdminUsersPage } from './components/AdminUsersPage'
+import { VendorDashboard } from './components/VendorDashboard'
 import { BusinessPage } from './components/BusinessPage'
 import { BusinessRegisterPage } from './components/BusinessRegisterPage'
 import { BusinessLoginPage } from './components/BusinessLoginPage'
 import { BusinessPendingPage } from './components/BusinessPendingPage'
+import { DebugPage } from './components/DebugPage'
 import { ContactsPage } from './components/ContactsPage'
 import { OfferPage } from './components/OfferPage'
 import { UserAuthPage } from './components/UserAuthPage'
@@ -39,11 +42,24 @@ import { Footer } from './components/Footer'
 import { AuthProvider } from './contexts/AuthContext'
 import { Toaster } from 'sonner'
 
+function SpaRedirect() {
+  const { id, version } = useParams()
+  console.log('🔄 SpaRedirect called with id:', id, 'version:', version)
+  console.log('🔄 SpaRedirect: redirecting from /adminko/spa/' + id + ' to /adminko/spa/' + id + '/edit')
+  return <Navigate to={`/adminko/spa/${id}/edit`} replace />
+}
+
 function AppContent() {
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/adminko')
   const isAuthRoute = location.pathname === '/user-auth'
   const isHomePage = location.pathname === '/'
+  
+  // Отладка маршрутов
+  console.log('🔍 Current pathname:', location.pathname)
+  if (location.pathname.startsWith('/adminko/spa/') && !location.pathname.endsWith('/edit')) {
+    console.log('⚠️ Detected old spa route without /edit:', location.pathname)
+  }
 
   // Админка с новым shadcn-admin дизайном
   if (isAdminRoute) {
@@ -55,11 +71,18 @@ function AppContent() {
               <AdminPage />
             </ProtectedRoute>
           } />
+          <Route path="/adminko/dashboard" element={
+            <ProtectedRoute allowedRoles={['vendor']}>
+              <VendorDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="/adminko/spa/new" element={
             <ProtectedRoute>
               <AdminSpaEdit />
             </ProtectedRoute>
           } />
+          <Route path="/adminko/spa/:id" element={<SpaRedirect />} />
+          <Route path="/adminko/spa/:id/:version" element={<SpaRedirect />} />
           <Route path="/adminko/spa/:id/edit" element={
             <ProtectedRoute>
               <AdminSpaEdit />
@@ -151,6 +174,7 @@ function AppContent() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/debug" element={<DebugPage />} />
           <Route path="/business" element={<BusinessPage />} />
           <Route path="/business/register" element={<BusinessRegisterPage />} />
           <Route path="/business/login" element={<BusinessLoginPage />} />

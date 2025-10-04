@@ -1,23 +1,48 @@
 import { useState, useEffect } from 'react'
 import { spaService } from '@/services/spaService'
+import { brandService } from '@/services/brandService'
 import type { Spa, SpaFilters } from '@/types/spa'
 import { toast } from 'sonner'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function useSpas() {
   const [spas, setSpas] = useState<Spa[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const { user, profile, isAdmin, isVendor } = useAuth()
 
   useEffect(() => {
     loadSpas()
-  }, [])
+  }, [user, profile])
 
   const loadSpas = async () => {
     try {
       setLoading(true)
       setError(null)
       console.log('🔄 Loading spas from Supabase...')
-      const data = await spaService.getAll()
+      
+      let data: Spa[]
+      
+      if (isAdmin) {
+        // Админ видит все СПА
+        data = await spaService.getAll()
+      } else if (isVendor && user) {
+        // Вендор видит только свои СПА
+        console.log('🔍 Loading vendor brands for user:', user.id)
+        const vendorBrands = await brandService.getByOwnerId(user.id)
+        const brandIds = vendorBrands.map(brand => brand.id)
+        
+        if (brandIds.length === 0) {
+          console.log('⚠️ No brands found for vendor')
+          data = []
+        } else {
+          data = await spaService.getByVendorBrands(brandIds)
+        }
+      } else {
+        // Обычный пользователь не должен видеть админку
+        data = []
+      }
+      
       console.log('✅ Spas loaded:', data.length)
       setSpas(data)
     } catch (err) {
@@ -73,13 +98,15 @@ export function useSpaSearch(filters: SpaFilters & { searchTerm?: string }) {
 
   const search = async () => {
     try {
+      console.log('🔍 useSpaSearch.search called with filters:', filters)
       setLoading(true)
       setError(null)
       const data = await spaService.search(filters)
+      console.log('✅ useSpaSearch received data:', data.length, 'spas')
       setSpas(data)
     } catch (err) {
+      console.error('❌ useSpaSearch error:', err)
       setError(err as Error)
-      console.error('Error searching spas:', err)
     } finally {
       setLoading(false)
     }

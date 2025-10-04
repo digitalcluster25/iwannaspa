@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { database as supabase } from '@/lib/database'
 import type {
   City,
   Category,

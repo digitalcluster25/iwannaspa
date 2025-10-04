@@ -40,3 +40,4 @@ export function VendorRoute({ children }: VendorRouteProps) {
 
   return <>{children}</>
 }
+

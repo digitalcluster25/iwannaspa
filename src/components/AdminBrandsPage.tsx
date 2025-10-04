@@ -43,7 +43,7 @@ import { Switch } from './ui/switch'
 import { Plus, Edit, Trash2, Building2, User } from 'lucide-react'
 import { useBrands } from '@/hooks/useBrands'
 import { brandService } from '@/services/brandService'
-import { supabase } from '@/lib/supabase'
+import { database as supabase } from '@/lib/database'
 import { toast } from 'sonner'
 import type { Brand } from '@/types/spa'
 
@@ -65,7 +65,7 @@ export function AdminBrandsPage() {
     description: '',
     logo: '',
     active: true,
-    owner_id: '',
+    owner_id: 'none',
   })
 
   // Загрузка списка вендоров для выбора владельца
@@ -115,7 +115,7 @@ export function AdminBrandsPage() {
         description: formData.description.trim() || undefined,
         logo: formData.logo.trim() || undefined,
         active: formData.active,
-        owner_id: formData.owner_id || undefined,
+        owner_id: formData.owner_id === 'none' ? undefined : formData.owner_id || undefined,
       })
       await refetch()
       toast.success('Бренд создан')
@@ -124,7 +124,7 @@ export function AdminBrandsPage() {
         description: '',
         logo: '',
         active: true,
-        owner_id: '',
+        owner_id: 'none',
       })
       setIsAddDialogOpen(false)
     } catch (error) {
@@ -145,7 +145,7 @@ export function AdminBrandsPage() {
         description: formData.description.trim() || null,
         logo: formData.logo.trim() || null,
         active: formData.active,
-        owner_id: formData.owner_id || null,
+        owner_id: formData.owner_id === 'none' ? null : formData.owner_id || null,
       })
       await refetch()
       toast.success('Бренд обновлен')
@@ -154,7 +154,7 @@ export function AdminBrandsPage() {
         description: '',
         logo: '',
         active: true,
-        owner_id: '',
+        owner_id: 'none',
       })
       setEditingBrand(null)
       setIsEditDialogOpen(false)
@@ -182,7 +182,7 @@ export function AdminBrandsPage() {
       description: brand.description || '',
       logo: brand.logo || '',
       active: brand.active,
-      owner_id: brand.owner_id || '',
+      owner_id: brand.owner_id || 'none',
     })
     fetchVendors()
     setIsEditDialogOpen(true)
@@ -194,7 +194,7 @@ export function AdminBrandsPage() {
       description: '',
       logo: '',
       active: true,
-      owner_id: '',
+      owner_id: 'none',
     })
     fetchVendors()
     setIsAddDialogOpen(true)
@@ -291,7 +291,7 @@ export function AdminBrandsPage() {
                     <SelectValue placeholder="Выберите вендора" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Без владельца</SelectItem>
+                    <SelectItem value="none">Без владельца</SelectItem>
                     {vendors.map((vendor) => (
                       <SelectItem key={vendor.id} value={vendor.id}>
                         {vendor.name || vendor.email}
@@ -500,7 +500,7 @@ export function AdminBrandsPage() {
                   <SelectValue placeholder="Выберите вендора" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Без владельца</SelectItem>
+                  <SelectItem value="none">Без владельца</SelectItem>
                   {vendors.map((vendor) => (
                     <SelectItem key={vendor.id} value={vendor.id}>
                       {vendor.name || vendor.email}

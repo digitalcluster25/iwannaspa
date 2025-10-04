@@ -29,7 +29,7 @@ import { Label } from './ui/label'
 import { Input } from './ui/input'
 import { Switch } from './ui/switch'
 import { Plus, Edit, Trash2, User, Building, Shield } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { database as supabase } from '@/lib/database'
 import { toast } from 'sonner'
 
 interface UserProfile {

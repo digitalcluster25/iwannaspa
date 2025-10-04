@@ -1,11 +1,11 @@
-import { supabase } from '@/lib/supabase'
+import { database } from '@/lib/database'
 import type { Spa, SpaFilters } from '@/types/spa'
 
 export const spaService = {
   // Получить все СПА (упрощенная версия для админки)
   async getAll() {
     console.log('🔄 Fetching spas...')
-    const { data, error } = await supabase
+    const { data, error } = await database
       .from('spas')
       .select('*')
       .eq('active', true)
@@ -21,9 +21,28 @@ export const spaService = {
     return this.transformSpas(data)
   },
 
+  // Получить СПА по бренду вендора
+  async getByVendorBrands(brandIds: string[]) {
+    console.log('🔄 Fetching spas by vendor brands:', brandIds)
+    const { data, error } = await database
+      .from('spas')
+      .select('*')
+      .in('brand_id', brandIds)
+      .eq('active', true)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('❌ Error fetching spas by vendor brands:', error)
+      throw error
+    }
+
+    console.log('✅ Vendor spas loaded:', data.length)
+    return this.transformSpas(data)
+  },
+
   // Получить по ID
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await database
       .from('spas')
       .select(
         `
@@ -49,7 +68,7 @@ export const spaService = {
   async create(spa: Partial<Spa>) {
     console.log('Creating SPA with data:', spa)
 
-    const { data: spaData, error: spaError } = await supabase
+    const { data: spaData, error: spaError } = await database
       .from('spas')
       .insert({
         name: spa.name,
@@ -78,7 +97,7 @@ export const spaService = {
     // Добавляем услуги
     if (spa.services && spa.services.length > 0) {
       console.log('Saving services:', spa.services.length)
-      const { error: servicesError } = await supabase
+      const { error: servicesError } = await database
         .from('spa_services')
         .insert(
           spa.services.map(s => ({
@@ -98,7 +117,7 @@ export const spaService = {
     if (spa.amenities && spa.amenities.length > 0) {
       // Получаем ID удобств по названиям
       const { data: amenitiesData, error: amenitiesSearchError } =
-        await supabase
+        await database
           .from('amenities')
           .select('id, name')
           .in('name', spa.amenities)
@@ -112,7 +131,7 @@ export const spaService = {
           amenity_id: a.id,
         }))
 
-        const { error: amenitiesError } = await supabase
+        const { error: amenitiesError } = await database
           .from('spa_amenities')
           .insert(insertData)
 
@@ -130,7 +149,7 @@ export const spaService = {
       console.log('Saving contacts:', spa.contactInfo)
 
       // Сначала проверяем, существуют ли контакты (игнорируем ошибку если нет)
-      const { data: existingContact, error: checkError } = await supabase
+      const { data: existingContact, error: checkError } = await database
         .from('spa_contacts')
         .select('id')
         .eq('spa_id', spaData.id)
@@ -144,7 +163,7 @@ export const spaService = {
       if (existingContact) {
         console.log('Updating existing contact')
         // Обновляем существующие
-        const { error: contactError } = await supabase
+        const { error: contactError } = await database
           .from('spa_contacts')
           .update({
             phone: spa.contactInfo.phone,
@@ -162,7 +181,7 @@ export const spaService = {
       } else {
         console.log('Creating new contact')
         // Создаем новые
-        const { error: contactError } = await supabase
+        const { error: contactError } = await database
           .from('spa_contacts')
           .insert({
             spa_id: spaData.id,
@@ -185,7 +204,7 @@ export const spaService = {
 
   // Обновить
   async update(id: string, spa: Partial<Spa>) {
-    const { error } = await supabase
+    const { error } = await database
       .from('spas')
       .update({
         name: spa.name,
@@ -214,11 +233,11 @@ export const spaService = {
     // Обновляем услуги
     if (spa.services) {
       // Удаляем старые услуги
-      await supabase.from('spa_services').delete().eq('spa_id', id)
+      await database.from('spa_services').delete().eq('spa_id', id)
 
       // Добавляем новые
       if (spa.services.length > 0) {
-        await supabase.from('spa_services').insert(
+        await database.from('spa_services').insert(
           spa.services.map(s => ({
             spa_id: id,
             name: s.name,
@@ -234,7 +253,7 @@ export const spaService = {
     // Обновляем удобства
     if (spa.amenities) {
       // Удаляем старые удобства
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await database
         .from('spa_amenities')
         .delete()
         .eq('spa_id', id)
@@ -243,7 +262,7 @@ export const spaService = {
 
       // Добавляем новые
       if (spa.amenities.length > 0) {
-        const { data: amenitiesData, error: searchError } = await supabase
+        const { data: amenitiesData, error: searchError } = await database
           .from('amenities')
           .select('id, name')
           .in('name', spa.amenities)
@@ -257,7 +276,7 @@ export const spaService = {
             amenity_id: a.id,
           }))
 
-          const { error: insertError } = await supabase
+          const { error: insertError } = await database
             .from('spa_amenities')
             .insert(insertData)
           if (insertError)
@@ -270,7 +289,7 @@ export const spaService = {
 
     // Обновляем контакты
     if (spa.contactInfo) {
-      await supabase.from('spa_contacts').upsert({
+      await database.from('spa_contacts').upsert({
         spa_id: id,
         phone: spa.contactInfo.phone,
         email: spa.contactInfo.email,
@@ -285,7 +304,7 @@ export const spaService = {
 
   // Удалить
   async delete(id: string) {
-    const { error } = await supabase.from('spas').delete().eq('id', id)
+    const { error } = await database.from('spas').delete().eq('id', id)
 
     if (error) throw error
   },
@@ -294,53 +313,36 @@ export const spaService = {
   async search(
     filters: SpaFilters & { searchTerm?: string; amenities?: string[] }
   ) {
-    let query = supabase
-      .from('spas')
-      .select(
-        `
-        *,
-        city:cities(id, name),
-        services:spa_services(*),
-        amenities:spa_amenities(amenity:amenities(*)),
-        contact:spa_contacts(*)
-      `
-      )
-      .eq('active', true)
+    console.log('🔍 spaService.search called with filters:', filters)
+    console.log('🔍 spaService using database client:', database)
 
-    if (filters.searchTerm) {
-      query = query.or(
-        `name.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%`
-      )
-    }
-    if (filters.category) {
-      query = query.eq('category', filters.category)
-    }
-    if (filters.purpose) {
-      query = query.eq('purpose', filters.purpose)
-    }
-    if (filters.minPrice !== undefined) {
-      query = query.gte('price', filters.minPrice)
-    }
-    if (filters.maxPrice !== undefined) {
-      query = query.lte('price', filters.maxPrice)
-    }
-    if (filters.minRating !== undefined) {
-      query = query.gte('rating', filters.minRating)
-    }
-    if (filters.location) {
-      query = query.ilike('location', `%${filters.location}%`)
-    }
+    // Для Railway API используем упрощенный подход
     if (filters.featured !== undefined) {
-      query = query.eq('featured', filters.featured)
+      console.log('🔍 Searching for featured spas:', filters.featured)
+      console.log('🔍 Making request to Railway API...')
+      
+      // Используем правильный синтаксис для Railway API
+      const result = await database
+        .from('spas')
+        .search({
+          featured: filters.featured,
+          active: true
+        })
+
+      console.log('✅ Featured spas found:', result?.length || 0)
+      console.log('✅ Featured spas data:', result)
+      return this.transformSpas(result || [])
     }
 
-    const { data, error } = await query.order('created_at', {
-      ascending: false,
-    })
+    // Для других фильтров используем базовый запрос
+    const result = await database
+      .from('spas')
+      .search({
+        active: true
+      })
 
-    if (error) throw error
-
-    return this.transformSpas(data)
+    console.log('✅ All spas found:', result?.length || 0)
+    return this.transformSpas(result || [])
   },
 
   // Трансформация одного СПА

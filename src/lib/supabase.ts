@@ -1,25 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
+// Переключение между Supabase и Railway
+import { database, supabase as supabaseAuth } from './database'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Для совместимости экспортируем database как supabase
+export const supabase = database
 
-console.log('🔍 Supabase config:', {
-  url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'MISSING',
-  urlFull: supabaseUrl,
-  key: supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'MISSING',
-  keyLength: supabaseAnonKey?.length,
-  env: import.meta.env.MODE
-})
+// Экспортируем также оригинальный Supabase клиент для аутентификации
+export { supabaseAuth }
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase variables')
-  throw new Error('Missing Supabase environment variables')
-}
-
-console.log('🔍 Creating Supabase client...')
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-console.log('🔍 Supabase client created:', {
-  hasAuth: !!supabase.auth,
-  hasFrom: typeof supabase.from === 'function',
-  supabaseUrl: supabase.supabaseUrl
-})
+// Логирование
+console.log('🔧 Database client initialized')
