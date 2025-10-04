@@ -316,33 +316,75 @@ export const spaService = {
     console.log('🔍 spaService.search called with filters:', filters)
     console.log('🔍 spaService using database client:', database)
 
-    // Для Railway API используем упрощенный подход
-    if (filters.featured !== undefined) {
-      console.log('🔍 Searching for featured spas:', filters.featured)
-      console.log('🔍 Making request to Railway API...')
+    // Проверяем, используем ли мы Railway API или Supabase
+    const isRailwayAPI = typeof database.from === 'function' && 
+                        typeof database.from('spas').search === 'function'
+
+    if (isRailwayAPI) {
+      console.log('🚂 Using Railway API syntax')
       
-      // Используем правильный синтаксис для Railway API
+      // Для Railway API используем упрощенный подход
+      if (filters.featured !== undefined) {
+        console.log('🔍 Searching for featured spas:', filters.featured)
+        
+        const result = await database
+          .from('spas')
+          .search({
+            featured: filters.featured,
+            active: true
+          })
+
+        console.log('✅ Featured spas found:', result?.length || 0)
+        return this.transformSpas(result || [])
+      }
+
+      // Для других фильтров используем базовый запрос
       const result = await database
         .from('spas')
         .search({
-          featured: filters.featured,
           active: true
         })
 
-      console.log('✅ Featured spas found:', result?.length || 0)
-      console.log('✅ Featured spas data:', result)
+      console.log('✅ All spas found:', result?.length || 0)
       return this.transformSpas(result || [])
+    } else {
+      console.log('☁️ Using Supabase syntax')
+      
+      // Для Supabase используем стандартный синтаксис
+      if (filters.featured !== undefined) {
+        console.log('🔍 Searching for featured spas:', filters.featured)
+        
+        const { data, error } = await database
+          .from('spas')
+          .select('*')
+          .eq('active', true)
+          .eq('featured', filters.featured)
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          console.error('❌ Error searching featured spas:', error)
+          throw error
+        }
+
+        console.log('✅ Featured spas found:', data?.length || 0)
+        return this.transformSpas(data || [])
+      }
+
+      // Для других фильтров используем базовый запрос
+      const { data, error } = await database
+        .from('spas')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('❌ Error searching spas:', error)
+        throw error
+      }
+
+      console.log('✅ All spas found:', data?.length || 0)
+      return this.transformSpas(data || [])
     }
-
-    // Для других фильтров используем базовый запрос
-    const result = await database
-      .from('spas')
-      .search({
-        active: true
-      })
-
-    console.log('✅ All spas found:', result?.length || 0)
-    return this.transformSpas(result || [])
   },
 
   // Трансформация одного СПА

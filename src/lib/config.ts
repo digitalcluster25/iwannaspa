@@ -2,7 +2,9 @@
 
 export const CONFIG = {
   // Переключение между Supabase и Railway
-  USE_RAILWAY: true, // Принудительно используем Railway
+  // В продакшене используем Supabase, локально - Railway API
+  USE_RAILWAY: import.meta.env.VITE_USE_RAILWAY === 'true' && 
+               import.meta.env.VITE_RAILWAY_POSTGREST_URL?.includes('localhost'),
   
   // Supabase конфигурация
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'https://ewkeuupfristqqonkcph.supabase.co',
@@ -24,10 +26,14 @@ console.log('🔧 Config loaded:', {
   ENV_VITE_RAILWAY_POSTGREST_URL: import.meta.env.VITE_RAILWAY_POSTGREST_URL
 })
 
-// Принудительное логирование
-console.log('🚂 FORCE: Using Railway API for data operations')
-console.log('☁️ FORCE: Using Supabase for authentication only')
+// Логирование в зависимости от окружения
+if (CONFIG.USE_RAILWAY) {
+  console.log('🚂 Using Railway API for data operations (local development)')
+} else {
+  console.log('☁️ Using Supabase for data operations (production)')
+}
 console.log('🌍 Environment check:', {
   VITE_USE_RAILWAY: import.meta.env.VITE_USE_RAILWAY,
-  VITE_RAILWAY_POSTGREST_URL: import.meta.env.VITE_RAILWAY_POSTGREST_URL
+  VITE_RAILWAY_POSTGREST_URL: import.meta.env.VITE_RAILWAY_POSTGREST_URL,
+  isLocalhost: import.meta.env.VITE_RAILWAY_POSTGREST_URL?.includes('localhost')
 })
